@@ -1,0 +1,90 @@
+# ========== Miscellaneous ==========
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# ========== IntelliJ / VSCode ==========
+*.iml
+*.ipr
+*.iws
+.idea/
+# VS Code: 可根据团队决定是否保留 .vscode（若包含个性化 launch.json 则建议忽略）
+.vscode/
+
+# ========== Flutter / Dart / Pub ==========
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Generated plugin registrant
+**/generated_plugin_registrant.dart
+
+# Android Studio build artifacts
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ========== macOS / iOS / CocoaPods ==========
+ios/Pods/
+ios/Flutter/Flutter.podspec
+ios/Runner/Generated.xcconfig
+ios/Flutter/Flutter.framework
+ios/Flutter/engine/ # if present
+*.lock
+DerivedData/
+build/
+*.xcworkspace
+*.xcuserstate
+
+# ========== Android ==========
+**/android/local.properties
+**/android/.gradle
+**/android/app/*.keystore
+**/android/key.properties
+
+# ========== Credentials & Secrets (CRITICAL) ==========
+# 把所有凭证/密钥/私钥加入忽略
+assets/credentials/
+*.p12
+*.jks
+*.keystore
+*.pem
+*.crt
+*.key
+secrets.json
+.env
+.env.*    # 若你用 dotenv 文件
+
+# ========== Symbolication / Obfuscation ==========
+app.*.symbols
+app.*.map.json
+
+# ========== CI / Tooling ==========
+*.flutter-plugins
+*.flutter-plugins-dependencies
+.flutter-plugins
+.packages
+pubspec.lock
+
+# ========== Local config / caches ==========
+.idea/
+.vscode/
+tmp/
+**/generated/
+
+# ========== Other ==========
+# 如果使用 keystore 或证书，务必不要提交
+# 若你有其他临时/个人文件夹，可继续在此添加

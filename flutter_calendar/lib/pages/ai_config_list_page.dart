@@ -1,0 +1,165 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ai_smart_calendar/providers/ai_config_provider.dart';
+import 'package:ai_smart_calendar/utils/app_routes.dart';
+import 'package:ai_smart_calendar/services/ai_client.dart';
+import 'package:ai_smart_calendar/pages/ai_service_detail_page.dart';
+
+class AiConfigListPage extends ConsumerWidget {
+  const AiConfigListPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final aiConfigState = ref.watch(aiConfigProvider);
+
+    return aiConfigState.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('加载失败: $error')),
+      data: (state) {
+        final configs = state.configs;
+        final activeConfigId = state.activeConfigId;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('AI服务配置'),
+            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          ),
+          body: configs.isEmpty
+              ? const Center(
+                  child: Text('暂无AI服务配置'),
+                )
+              : ListView.builder(
+                  itemCount: configs.length,
+                  itemBuilder: (context, index) {
+                    final config = configs[index];
+                    final isActive = config['id'] == activeConfigId;
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      child: ListTile(
+                        leading: isActive
+                            ? const Icon(Icons.check_circle,
+                                color: Colors.green)
+                            : const Icon(Icons.circle_outlined),
+                        title: Text(
+                          config['name'] ?? '未命名配置',
+                          style: TextStyle(
+                            fontWeight:
+                                isActive ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                '类型: ${_getServiceTypeName(config[AiConfigKeys.type])}'),
+                            if (config[AiConfigKeys.model]?.isNotEmpty == true)
+                              Text('模型: ${config[AiConfigKeys.model]}'),
+                            if (config[AiConfigKeys.url]?.isNotEmpty == true)
+                              Text('URL: ${config[AiConfigKeys.url]}'),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                _navigateToFormPage(context, config: config);
+                              },
+                              tooltip: '编辑配置',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                _showDeleteDialog(context, ref, config);
+                              },
+                              tooltip: '删除配置',
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          if (!isActive) {
+                            ref
+                                .read(aiConfigProvider.notifier)
+                                .setActiveConfig(config['id']!);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('已切换到 ${config['name']}'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              _navigateToFormPage(context);
+            },
+            child: const Icon(Icons.add),
+          ),
+        );
+      },
+    );
+  }
+
+  String _getServiceTypeName(String? type) {
+    switch (type) {
+      case 'openai':
+        return 'OpenAI';
+      case 'deepseek':
+        return 'DeepSeek';
+      case 'generic':
+        return '通用服务';
+      default:
+        return '未知';
+    }
+  }
+
+  void _navigateToFormPage(BuildContext context,
+      {Map<String, String>? config}) {
+    context.push(
+      AppRoutes.aiServiceDetail,
+      extra: config,
+    );
+  }
+
+  void _showDeleteDialog(
+      BuildContext context, WidgetRef ref, Map<String, String> config) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('删除配置'),
+          content: Text('确定要删除 "${config['name']}" 配置吗？'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                ref.read(aiConfigProvider.notifier).deleteConfig(config['id']!);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('已删除 ${config['name']}'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text('删除', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
