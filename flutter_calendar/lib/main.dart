@@ -87,8 +87,6 @@ class MyApp extends ConsumerWidget {
         ThemeDao.colorSchema(themeNotifier, context, Brightness.dark);
 
     return MaterialApp.router(
-      key: ValueKey(
-          '${themeNotifier.primaryColor.value}_${currentLocale.languageCode}'),
       title: 'AI Smart Calendar',
       theme: lightTheme,
       darkTheme: darkTheme,

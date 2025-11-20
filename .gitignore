@@ -1,0 +1,5 @@
+# 忽略所有子文件夹里的 build 目录
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
