@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ai_smart_calendar/models/task_model.dart';
 import 'package:ai_smart_calendar/widgets/todo_card.dart';
 import 'package:ai_smart_calendar/widgets/calendar_widget.dart';
-import 'package:ai_smart_calendar/widgets/ai_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_smart_calendar/providers/tasks_provider.dart';
 import 'package:ai_smart_calendar/pages/settings_page.dart';
@@ -26,15 +25,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     debugPrint('--- HomePage is rebuilding ---');
     final ThemeData theme = Theme.of(context);
-
-    // ======================= 📍 探针 1 =======================
-    // 监控aiConfigProvider的状态变化
-    final activeConfig =
-        ref.watch(aiConfigProvider.select((s) => s.value?.activeConfigId));
-    developer.log(
-        '[PROBE LOG] Top-level widget is rebuilding. Current activeConfig ID: $activeConfig',
-        name: 'probe.debug');
-    // ========================================================
 
     // 将所有页面放入一个列表中
     final List<Widget> pages = <Widget>[

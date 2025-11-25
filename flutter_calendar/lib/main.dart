@@ -78,7 +78,6 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // MyApp 中不再有任何对 lifecycleManagerProvider 的引用
     final themeNotifier = ref.watch(themeNotifierProvider);
     final currentLocale = ref.watch(localeNotifierProvider);
     final lightTheme =
