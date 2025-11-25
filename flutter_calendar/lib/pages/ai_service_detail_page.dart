@@ -114,6 +114,14 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
       appBar: AppBar(
         title: Text(widget.config != null ? 'AI服务详情' : '添加AI服务'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            }
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -443,20 +451,24 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               onTap: () {
                 showDialog(
                   context: context,
-                  builder: (context) => AlertDialog(
+                  builder: (BuildContext dialogContext) => AlertDialog(
                     title: const Text("确认清空"),
                     content: const Text("确定要清空所有AI缓存吗？此操作不可撤销。"),
                     actions: [
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pop();
+                          if (dialogContext.canPop()) {
+                            dialogContext.pop();
+                          }
                         },
                         child: const Text("取消"),
                       ),
                       TextButton(
                         onPressed: () {
                           HiveService.clearAiCache();
-                          Navigator.of(context).pop();
+                          if (dialogContext.canPop()) {
+                            dialogContext.pop();
+                          }
                           setState(() {});
                         },
                         child: const Text("确认"),
@@ -577,8 +589,8 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
 
       // 延迟返回，让用户看到成功消息
       await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        Navigator.of(context).pop();
+      if (mounted && context.canPop()) {
+        context.pop();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -628,23 +640,29 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   }
 
   void _showDeleteDialog() {
+    // 保存页面的 context，以便在对话框关闭后使用
+    final pageContext = context;
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('删除配置'),
           content: Text('确定要删除 "${widget.config!['name']}" 配置吗？'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
               },
               child: const Text('取消'),
             ),
             TextButton(
               onPressed: () {
                 _deleteConfig();
-                Navigator.of(context).pop();
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
               },
               child: const Text('删除', style: TextStyle(color: Colors.red)),
             ),
@@ -674,8 +692,8 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
 
       // 延迟返回，让用户看到成功消息
       await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        Navigator.of(context).pop();
+      if (mounted && context.canPop()) {
+        context.pop();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -699,7 +717,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
 
     showDialog(
         context: context,
-        builder: (context) {
+        builder: (BuildContext dialogContext) {
           return AlertDialog(
             title: const Text("编辑提示词"),
             content: Column(
@@ -737,7 +755,9 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               TextButton(
                 onPressed: () {
                   HiveService.deleteAiPrompt(prompt["identifier"]);
-                  Navigator.of(context).pop();
+                  if (dialogContext.canPop()) {
+                    dialogContext.pop();
+                  }
                 },
                 child: const Text("重置"),
               ),
@@ -747,7 +767,9 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
                     prompt["identifier"],
                     controller.text,
                   );
-                  Navigator.of(context).pop();
+                  if (dialogContext.canPop()) {
+                    dialogContext.pop();
+                  }
                 },
                 child: const Text("保存"),
               ),

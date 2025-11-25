@@ -19,35 +19,42 @@ final GoRouter router = GoRouter(
   routes: <RouteBase>[
     // 主页
     GoRoute(
+      name: 'home',
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
         return const HomePage();
       },
     ),
 
-    // 任务详情页
-    // 注意路径中的 `:taskId`，这是一个路径参数
+// 新增任务页 —— 明确 extra 为 null
     GoRoute(
-      path: '/task/:taskId',
-      builder: (BuildContext context, GoRouterState state) {
-        final String taskId = state.pathParameters['taskId']!;
+      name: 'add_task',
+      path: '/add-task',
+      builder: (context, state) {
+        // 新增时根本不会传 extra，直接写 null 最清晰
         return TodoDetailPage(
-          taskId: taskId,
-          isEditing: true,
+          taskId: null,
+          initialTask: null, // 明确是新增
         );
       },
     ),
-
-    // 添加任务页
+    // 编辑任务页
     GoRoute(
-      path: '/add-task',
+      name: 'task_detail',
+      path: '/task/:taskId',
       builder: (BuildContext context, GoRouterState state) {
-        return const TodoDetailPage();
+        final taskId = state.pathParameters['taskId'];
+        final task = state.extra as TaskModel?; // 直接传整个对象！
+        return TodoDetailPage(
+          taskId: taskId,
+          initialTask: task, // 不为 null = 编辑
+        );
       },
     ),
 
     // AI 交互页
     GoRoute(
+      name: 'ai',
       path: '/ai',
       builder: (BuildContext context, GoRouterState state) {
         return const AIPage();
@@ -56,6 +63,7 @@ final GoRouter router = GoRouter(
 
     // 设置页
     GoRoute(
+      name: 'settings',
       path: '/settings',
       builder: (BuildContext context, GoRouterState state) {
         return const SettingsPage();
@@ -64,6 +72,7 @@ final GoRouter router = GoRouter(
 
     // AI 设置页
     GoRoute(
+      name: 'ai_settings',
       path: '/ai-settings',
       builder: (BuildContext context, GoRouterState state) {
         return const AISettingsPage();
@@ -72,6 +81,7 @@ final GoRouter router = GoRouter(
 
     // AI 配置列表页
     GoRoute(
+      name: 'ai_configs',
       path: '/ai-configs',
       builder: (BuildContext context, GoRouterState state) {
         return const AiConfigListPage();
@@ -80,18 +90,20 @@ final GoRouter router = GoRouter(
 
     // AI 配置表单页
     GoRoute(
+      name: 'ai_config_form',
       path: '/ai-config-form',
       builder: (BuildContext context, GoRouterState state) {
-        final config = state.extra as Map<String, String>?;
+        final config = state.extra as Map<String, String>?; // 直接传整个对象！
         return AiConfigFormPage(config: config);
       },
     ),
 
     // AI 服务详情页
     GoRoute(
+      name: 'ai_service_detail',
       path: '/ai-service-detail',
       builder: (BuildContext context, GoRouterState state) {
-        final config = state.extra as Map<String, String>?;
+        final config = state.extra as Map<String, String>?; // 直接传整个对象！
         return AiServiceDetailPage(config: config);
       },
     ),

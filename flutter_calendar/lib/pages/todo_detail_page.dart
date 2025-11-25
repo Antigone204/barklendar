@@ -10,12 +10,12 @@ import 'package:ai_smart_calendar/l10n/app_localizations.dart';
 
 class TodoDetailPage extends ConsumerStatefulWidget {
   final String? taskId;
-  final bool isEditing;
+  final TaskModel? initialTask; // 直接传整个对象！
 
   const TodoDetailPage({
     super.key,
     this.taskId,
-    this.isEditing = false,
+    this.initialTask,
   });
 
   @override
@@ -54,8 +54,16 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
     _tags = [];
     _tagController = TextEditingController();
 
-    // 如果提供了 taskId，从 provider 中获取任务数据
-    if (widget.taskId != null) {
+    // 优先使用传入的 initialTask，如果没有则从 provider 加载
+    if (widget.initialTask != null) {
+      // 直接使用传入的任务对象
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadTask(widget.initialTask!);
+        }
+      });
+    } else if (widget.taskId != null) {
+      // 从 provider 中获取任务数据
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _loadTaskFromProvider();
@@ -88,13 +96,21 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true, // 确保键盘弹出时调整布局
       appBar: AppBar(
-        title: Text(widget.isEditing
+        title: Text(_isEditing
             ? AppLocalizations.of(context)!.editTask
             : AppLocalizations.of(context)!.newTask),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            }
+          },
+        ),
         actions: <Widget>[
-          if (widget.isEditing)
+          if (_isEditing)
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: _deleteTask,
@@ -129,7 +145,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
                   return null;
                 },
                 style: Theme.of(context).textTheme.titleMedium,
-                autofocus: widget.taskId == null, // 新建任务时自动聚焦
+                autofocus: !_isEditing, // 新建任务时自动聚焦
               ),
               const SizedBox(height: 16),
               // 描述
@@ -536,6 +552,28 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
     }
   }
 
+  // 判断是否为编辑模式
+  bool get _isEditing => widget.initialTask != null || widget.taskId != null;
+
+  // 加载任务数据（从传入的对象）
+  void _loadTask(TaskModel task) {
+    debugPrint('正在加载任务: ${task.title}');
+    setState(() {
+      _titleController.text = task.title;
+      _descriptionController.text = task.description;
+      _dueDate = task.dueDate;
+      _dueTime = task.dueDate != null
+          ? TimeOfDay.fromDateTime(task.dueDate!)
+          : null;
+      _priority = task.priority;
+      _categoryId = task.categoryId;
+      _tags = List.from(task.tags);
+      _originalCreatedAt = task.createdAt; // 保存原始创建时间
+      _hasNotification = task.hasNotification;
+      _reminderOffsetInMinutes = task.reminderOffsetInMinutes;
+    });
+  }
+
   // 从 provider 中加载任务数据
   void _loadTaskFromProvider() {
     try {
@@ -550,21 +588,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
         );
 
         debugPrint('找到任务: ${task.title}');
-
-        setState(() {
-          _titleController.text = task.title;
-          _descriptionController.text = task.description;
-          _dueDate = task.dueDate;
-          _dueTime = task.dueDate != null
-              ? TimeOfDay.fromDateTime(task.dueDate!)
-              : null;
-          _priority = task.priority;
-          _categoryId = task.categoryId;
-          _tags = List.from(task.tags);
-          _originalCreatedAt = task.createdAt; // 保存原始创建时间
-          _hasNotification = task.hasNotification;
-          _reminderOffsetInMinutes = task.reminderOffsetInMinutes;
-        });
+        _loadTask(task);
       } else {
         debugPrint('任务数据为空或 taskId 为 null');
       }
@@ -578,7 +602,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
         ),
       );
       // 返回上一页
-      if (mounted) {
+      if (mounted && context.canPop()) {
         context.pop();
       }
     }
@@ -639,14 +663,14 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
     );
 
     try {
-      if (widget.isEditing) {
+      if (_isEditing) {
         await ref.read(tasksProvider.notifier).updateTask(task);
       } else {
         await ref.read(tasksProvider.notifier).addTask(task);
       }
 
       // 保存成功后返回任务对象
-      if (mounted) {
+      if (mounted && context.canPop()) {
         context.pop(task);
       }
     } catch (e) {
@@ -669,15 +693,17 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
   }
 
   void _deleteTask() {
+    // 保存页面的 context，以便在对话框关闭后使用
+    final pageContext = context;
     showDialog(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.confirmDelete),
-        content: Text(AppLocalizations.of(context)!.deleteTaskConfirmation),
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: Text(AppLocalizations.of(dialogContext)!.confirmDelete),
+        content: Text(AppLocalizations.of(dialogContext)!.deleteTaskConfirmation),
         actions: <Widget>[
           TextButton(
-            onPressed: () => context.pop(),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            onPressed: () => dialogContext.pop(),
+            child: Text(AppLocalizations.of(dialogContext)!.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -686,23 +712,32 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
                     .read(tasksProvider.notifier)
                     .deleteTask(widget.taskId!);
                 if (mounted) {
-                  context.pop();
-                  context.pop(true); // 返回删除成功标志
+                  // 关闭确认对话框
+                  if (dialogContext.canPop()) {
+                    dialogContext.pop();
+                  }
+                  // 使用页面的 context 返回上一页
+                  if (pageContext.canPop()) {
+                    pageContext.pop(true);
+                  }
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(pageContext).showSnackBar(
                     SnackBar(
                       content: Text(
-                          '${AppLocalizations.of(context)!.deleteFailed}: $e'),
+                          '${AppLocalizations.of(pageContext)!.deleteFailed}: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );
-                  context.pop(); // 关闭确认对话框
+                  // 安全地关闭确认对话框
+                  if (dialogContext.canPop()) {
+                    dialogContext.pop();
+                  }
                 }
               }
             },
-            child: Text(AppLocalizations.of(context)!.delete,
+            child: Text(AppLocalizations.of(dialogContext)!.delete,
                 style: const TextStyle(color: Colors.red)),
           ),
         ],

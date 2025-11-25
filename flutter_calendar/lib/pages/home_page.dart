@@ -10,6 +10,7 @@ import 'package:ai_smart_calendar/pages/settings_page.dart';
 import 'package:ai_smart_calendar/pages/ai_page.dart';
 import 'package:ai_smart_calendar/l10n/app_localizations.dart';
 import 'package:ai_smart_calendar/providers/ai_config_provider.dart';
+import 'package:ai_smart_calendar/utils/route_utils.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -119,7 +120,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       (TaskModel task) => TodoCard(
                         task: task,
                         onTap: () {
-                          context.push('/task/${task.id}', extra: task);
+                          context.toTaskDetail(task: task);
                         },
                         onComplete: (bool completed) {
                           ref
@@ -160,7 +161,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               (TaskModel task) => TodoCard(
                 task: task,
                 onTap: () {
-                  context.push('/task/${task.id}', extra: task);
+                  context.toTaskDetail(task: task);
                 },
                 onComplete: (bool completed) {
                   ref
@@ -174,7 +175,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               (TaskModel task) => TodoCard(
                 task: task,
                 onTap: () {
-                  context.push('/task/${task.id}', extra: task);
+                  context.toTaskDetail(task: task);
                 },
                 onComplete: (bool completed) {
                   ref
@@ -236,7 +237,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final ThemeData theme = Theme.of(context);
     return FloatingActionButton(
       onPressed: () async {
-        final Object? result = await context.push('/add-task');
+        final Object? result = await context.toTaskDetail();
         if (result != null && result is TaskModel) {
           // 使用 Provider 添加任务
           ref.read(tasksProvider.notifier).addTask(result);

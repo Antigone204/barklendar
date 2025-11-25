@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ai_smart_calendar/services/hive_service.dart';
 import 'package:ai_smart_calendar/utils/string_utils.dart';
 import 'package:ai_smart_calendar/enums/ai_prompts.dart';
@@ -187,11 +188,13 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
   }
 
   void _testAIConnection() async {
+    // 保存页面的 context，以便在对话框关闭后使用
+    final pageContext = context;
     // 显示加载对话框
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
+      builder: (BuildContext loadingDialogContext) => const AlertDialog(
         title: Text("测试连接"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -217,12 +220,14 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
       );
 
       // 关闭加载对话框
-      Navigator.of(context).pop();
+      if (pageContext.canPop()) {
+        pageContext.pop();
+      }
 
       // 显示测试结果
       showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
+        context: pageContext,
+        builder: (BuildContext resultDialogContext) => AlertDialog(
           title: Text(result['success'] == true ? "连接成功" : "连接失败"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -241,7 +246,9 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                if (resultDialogContext.canPop()) {
+                  resultDialogContext.pop();
+                }
               },
               child: const Text("确定"),
             ),
@@ -250,18 +257,22 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
       );
     } catch (e) {
       // 关闭加载对话框
-      Navigator.of(context).pop();
+      if (pageContext.canPop()) {
+        pageContext.pop();
+      }
 
       // 显示错误信息
       showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
+        context: pageContext,
+        builder: (BuildContext errorDialogContext) => AlertDialog(
           title: const Text("测试错误"),
           content: Text("测试过程中发生错误: $e"),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                if (errorDialogContext.canPop()) {
+                  errorDialogContext.pop();
+                }
               },
               child: const Text("确定"),
             ),
@@ -329,7 +340,7 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
 
     showDialog(
         context: context,
-        builder: (context) {
+        builder: (BuildContext dialogContext) {
           return AlertDialog(
             title: const Text("编辑提示词"),
             content: Column(
@@ -367,7 +378,9 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
               TextButton(
                 onPressed: () {
                   HiveService.deleteAiPrompt(prompt["identifier"]);
-                  Navigator.of(context).pop();
+                  if (dialogContext.canPop()) {
+                    dialogContext.pop();
+                  }
                 },
                 child: const Text("重置"),
               ),
@@ -377,7 +390,9 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
                     prompt["identifier"],
                     controller.text,
                   );
-                  Navigator.of(context).pop();
+                  if (dialogContext.canPop()) {
+                    dialogContext.pop();
+                  }
                 },
                 child: const Text("保存"),
               ),
@@ -391,6 +406,14 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI 设置'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            }
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -525,20 +548,24 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
+              builder: (BuildContext dialogContext) => AlertDialog(
                 title: const Text("确认清空"),
                 content: const Text("确定要清空所有AI缓存吗？此操作不可撤销。"),
                 actions: [
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      if (dialogContext.canPop()) {
+                        dialogContext.pop();
+                      }
                     },
                     child: const Text("取消"),
                   ),
                   TextButton(
                     onPressed: () {
                       HiveService.clearAiCache();
-                      Navigator.of(context).pop();
+                      if (dialogContext.canPop()) {
+                        dialogContext.pop();
+                      }
                       setState(() {});
                     },
                     child: const Text("确认"),

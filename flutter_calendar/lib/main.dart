@@ -1,11 +1,14 @@
 // main.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ai_smart_calendar/theme/app_theme.dart' as app_theme;
 import 'package:ai_smart_calendar/services/hive_service.dart';
 import 'package:ai_smart_calendar/services/notification_service.dart';
+
 import 'package:ai_smart_calendar/router/app_router.dart';
 import 'package:ai_smart_calendar/dao/theme.dart';
 import 'package:ai_smart_calendar/services/lifecycle_manager.dart';

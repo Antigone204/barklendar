@@ -329,7 +329,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         subtitle: const Text('管理、测试和配置多个AI服务及提示词'),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
-          context.push('/ai-configs');
+          context.pushNamed('ai_configs');
         },
       ),
     );
@@ -417,10 +417,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ref.read(themeNotifierProvider);
     // 从 Provider 获取初始颜色
     Color pickedColor = themeNotifier.primaryColor;
+    // 保存页面的 context，以便在对话框关闭后使用
+    final pageContext = context;
 
     await showDialog<void>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         // 【关键】使用 StatefulBuilder
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter dialogSetState) {
@@ -454,7 +456,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 TextButton(
                   child: Text(AppLocalizations.of(context)!.cancel),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    if (dialogContext.canPop()) {
+                      dialogContext.pop();
+                    }
                   },
                 ),
                 TextButton(
@@ -462,11 +466,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   onPressed: () {
                     // 这里保存的是被 dialogSetState 正确更新后的最新值
                     themeNotifier.setPrimaryColor(pickedColor);
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    if (dialogContext.canPop()) {
+                      dialogContext.pop();
+                    }
+                    ScaffoldMessenger.of(pageContext).showSnackBar(
                       SnackBar(
                           content: Text(
-                              AppLocalizations.of(context)!.themeColorUpdated)),
+                              AppLocalizations.of(pageContext)!.themeColorUpdated)),
                     );
                   },
                 ),

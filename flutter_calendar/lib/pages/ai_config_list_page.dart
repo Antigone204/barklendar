@@ -123,32 +123,35 @@ class AiConfigListPage extends ConsumerWidget {
 
   void _navigateToFormPage(BuildContext context,
       {Map<String, String>? config}) {
-    context.push(
-      AppRoutes.aiServiceDetail,
-      extra: config,
-    );
+    context.pushNamed('ai_service_detail', extra: config);
   }
 
   void _showDeleteDialog(
       BuildContext context, WidgetRef ref, Map<String, String> config) {
+    // 保存页面的 context，以便在对话框关闭后使用
+    final pageContext = context;
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('删除配置'),
           content: Text('确定要删除 "${config['name']}" 配置吗？'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
               },
               child: const Text('取消'),
             ),
             TextButton(
               onPressed: () {
                 ref.read(aiConfigProvider.notifier).deleteConfig(config['id']!);
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
+                ScaffoldMessenger.of(pageContext).showSnackBar(
                   SnackBar(
                     content: Text('已删除 ${config['name']}'),
                     duration: const Duration(seconds: 2),
