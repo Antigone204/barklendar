@@ -176,3 +176,57 @@ final AutoDisposeProviderFamily<AsyncValue<TaskModel>, String> taskProvider =
     );
   },
 );
+
+// =======================================================================
+// 5. TaskListPage 专用的组合 Provider - 优雅地处理 pending 和 completed 任务
+// =======================================================================
+
+/// 表示任务列表页面的状态，包含待办和已完成任务
+class TaskListState {
+  final List<TaskModel> pending;
+  final List<TaskModel> completed;
+
+  TaskListState({
+    required this.pending,
+    required this.completed,
+  });
+}
+
+/// 组合 provider：同时监听 pending 和 completed 任务，返回统一的状态
+/// 这样可以避免在 UI 层嵌套多个 .when() 调用
+final AutoDisposeProvider<AsyncValue<TaskListState>> taskListStateProvider =
+    Provider.autoDispose<AsyncValue<TaskListState>>(
+  (AutoDisposeProviderRef<AsyncValue<TaskListState>> ref) {
+    final AsyncValue<List<TaskModel>> pending =
+        ref.watch(pendingTasksProvider);
+    final AsyncValue<List<TaskModel>> completed =
+        ref.watch(completedTasksProvider);
+
+    // 当任意一个 provider 处于 loading 状态时，返回 loading
+    if (pending is AsyncLoading || completed is AsyncLoading) {
+      return const AsyncValue.loading();
+    }
+
+    // 当任意一个 provider 出错时，返回第一个错误
+    if (pending is AsyncError) {
+      return AsyncValue.error(
+        (pending as AsyncError).error,
+        (pending as AsyncError).stackTrace,
+      );
+    }
+    if (completed is AsyncError) {
+      return AsyncValue.error(
+        (completed as AsyncError).error,
+        (completed as AsyncError).stackTrace,
+      );
+    }
+
+    // 两个都成功时，组合数据
+    return AsyncValue.data(
+      TaskListState(
+        pending: pending.value ?? [],
+        completed: completed.value ?? [],
+      ),
+    );
+  },
+);

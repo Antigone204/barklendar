@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_smart_calendar/models/task_model.dart';
-import 'package:ai_smart_calendar/pages/home_page.dart';
+import 'package:ai_smart_calendar/pages/adaptive_home.dart';
 import 'package:ai_smart_calendar/pages/todo_detail_page.dart';
 import 'package:ai_smart_calendar/pages/ai_page.dart';
 import 'package:ai_smart_calendar/pages/settings_page.dart';
@@ -22,7 +22,7 @@ final GoRouter router = GoRouter(
       name: 'home',
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
-        return const HomePage();
+        return const AdaptiveHome();
       },
     ),
 

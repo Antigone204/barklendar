@@ -65,10 +65,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Scaffold(
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
+    // Scaffold 由 AdaptiveHome 管理
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: <Widget>[
           // 外观设置
           _buildSectionHeader(AppLocalizations.of(context)!.appearanceSettings),
           _buildThemeSetting(),
@@ -106,8 +106,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _buildSectionHeader(AppLocalizations.of(context)!.about),
           _buildAboutSection(),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildSectionHeader(String title) {

@@ -9,18 +9,17 @@ class AIPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      body: Column(
-        children: [
-          // 聊天消息列表 - 使用新的组件化实现
-          const Expanded(
-            child: MessageListView(),
-          ),
+    // Scaffold 由 AdaptiveHome 管理
+    return Column(
+      children: [
+        // 聊天消息列表 - 使用新的组件化实现
+        const Expanded(
+          child: MessageListView(),
+        ),
 
-          // 输入区域 - 使用新的组件化实现
-          const MessageInputField(),
-        ],
-      ),
+        // 输入区域 - 使用新的组件化实现
+        const MessageInputField(),
+      ],
     );
   }
 }
