@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:ai_smart_calendar/models/task_model.dart';
@@ -22,10 +22,24 @@ class NotificationService {
     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         _notificationsPlugin;
 
-    // 初始化时区数据库
+// 初始化时区数据库
     tz.initializeTimeZones();
-    final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+    // 1. 使用 var 让 Dart 自己推断类型（不管它是 String 还是 TimezoneInfo）
+    var timeZoneResult = await FlutterTimezone.getLocalTimezone();
+
+    // 2. 无论它返回什么，都强转成 String (通过 .toString())
+    // 这样能兼容 String 和可能出现的对象类型
+    String timeZoneName = timeZoneResult.toString();
+
+    try {
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+    } catch (e) {
+      // 兜底：如果有些奇怪的时区名字（比如 'Asia/Shanghai' 写成了其他格式）导致解析失败
+      // 我们默认回退到 UTC，防止应用崩溃
+      debugPrint("【警告】无法解析本地时区 '$timeZoneName'，回退到 UTC。错误: $e");
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
 
     // 为 Android 设置初始化参数
     const AndroidInitializationSettings initializationSettingsAndroid =

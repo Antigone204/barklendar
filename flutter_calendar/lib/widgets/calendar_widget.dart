@@ -26,14 +26,12 @@ class CalendarWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasksAsyncValue = ref.watch(tasksProvider);
 
-    // 注意：如果这个 Widget 已经在一个 Scaffold 内部，您可能需要移除这里的 Scaffold
     return Scaffold(
       body: Column(
         children: [
           // --- 1. 日历部分 ---
-          // [MODIFICATION 1]: 使用 Expanded 和 flex 控制视图占比
           Expanded(
-            flex: 3, // 日历视图占据 3 份空间
+            flex: 3,
             child: tasksAsyncValue.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Center(child: Text('加载任务失败: $err')),
@@ -42,9 +40,8 @@ class CalendarWidget extends ConsumerWidget {
           ),
           const Divider(height: 1, thickness: 1),
           // --- 2. 任务列表部分 ---
-          // [MODIFICATION 1]: 使用 Expanded 和 flex 控制视图占比
           Expanded(
-            flex: 2, // 任务列表视图占据 2 份空间
+            flex: 2,
             child: const _SelectedTasksList(),
           ),
         ],
@@ -86,9 +83,8 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
       _currentDisplayDate = DateTime(
         _currentDisplayDate.year,
         _currentDisplayDate.month + delta,
-        _currentDisplayDate.day, // 保持当前日期，而不是固定为1号
+        _currentDisplayDate.day,
       );
-      // 更新日历控制器的显示日期
       _calendarController.displayDate = _currentDisplayDate;
     });
   }
@@ -101,15 +97,12 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
       focusNode: _focusNode,
       autofocus: true,
       onKey: (RawKeyEvent event) {
-        // 处理键盘事件 - 所有方向键都用于月份切换
         if (event is RawKeyDownEvent) {
           if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
               event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            // 上箭头或左箭头 - 切换到上个月
             _changeMonth(-1);
           } else if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
               event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            // 下箭头或右箭头 - 切换到下个月
             _changeMonth(1);
           }
         }
@@ -118,28 +111,22 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
         onEnter: (_) => _focusNode.requestFocus(),
         child: Listener(
           onPointerSignal: (pointerSignal) {
-            // 处理鼠标滚轮事件
-            // 使用反射来访问scrollDelta，避免编译时类型检查
             try {
               final dynamic signal = pointerSignal;
               final dynamic scrollDelta = signal.scrollDelta?.dy;
-
               if (scrollDelta != null && scrollDelta is double) {
-                // 检测滚轮方向
                 if (scrollDelta > 0) {
-                  // 向下滚动 - 切换到下个月
                   _changeMonth(1);
                 } else if (scrollDelta < 0) {
-                  // 向上滚动 - 切换到上个月
                   _changeMonth(-1);
                 }
               }
             } catch (e) {
-              // 忽略错误，继续执行
+              // 忽略错误
             }
           },
           child: SfCalendar(
-            controller: _calendarController, // 使用控制器来动态控制显示
+            controller: _calendarController,
             initialDisplayDate: _currentDisplayDate,
             initialSelectedDate: selectedDate,
             view: CalendarView.month,
@@ -172,7 +159,7 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
   }
 }
 
-// 独立的任务列表 Widget (无改动)
+// 独立的任务列表 Widget
 class _SelectedTasksList extends ConsumerWidget {
   const _SelectedTasksList();
 
@@ -195,13 +182,21 @@ class _SelectedTasksList extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                '$dayOfWeek $dayOfMonth',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+            // [修复]: 进一步减小 Padding (8 -> 4) 并添加 FittedBox
+            Container(
+              height: 40, // 强制给一个较小的高度约束
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '$dayOfWeek $dayOfMonth',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -215,7 +210,7 @@ class _SelectedTasksList extends ConsumerWidget {
             else
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.only(top: 0), // 移除列表顶部的额外间距
                   itemCount: selectedTasks.length,
                   itemBuilder: (context, index) {
                     final task = selectedTasks[index];
@@ -230,7 +225,7 @@ class _SelectedTasksList extends ConsumerWidget {
   }
 }
 
-// 任务卡片 Widget (添加时间显示)
+// 任务卡片 Widget
 class _TaskCard extends StatelessWidget {
   final TaskModel task;
   const _TaskCard({required this.task});
@@ -238,7 +233,7 @@ class _TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 75, // 增加高度以容纳时间显示
+      height: 75,
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -328,28 +323,24 @@ _CalendarDataSource _getCalendarDataSource(List<TaskModel> tasks) {
   return _CalendarDataSource(appointments);
 }
 
-// [MODIFICATION 2]: 完全重新设计的任务优先级颜色方案
 Color _getTaskColor(TaskModel task) {
-  // 已完成和已逾期的状态优先显示
-  if (task.isCompleted) return Colors.grey; // 灰色 - 已完成任务
+  if (task.isCompleted) return Colors.grey;
   if (task.isOverdue) return AppTheme.errorColor;
 
-  // 根据优先级返回不同颜色 - 全新设计
   switch (task.priority) {
     case TaskPriority.urgent:
-      return const Color(0xFFFF5252); // 鲜艳红色 - 紧急优先级
+      return const Color(0xFFFF5252);
     case TaskPriority.high:
-      return const Color(0xFFFF9800); // 橙色 - 高优先级
+      return const Color(0xFFFF9800);
     case TaskPriority.medium:
-      return const Color(0xFF2196F3); // 蓝色 - 中优先级
+      return const Color(0xFF2196F3);
     case TaskPriority.low:
-      return const Color(0xFF4CAF50); // 绿色 - 低优先级
+      return const Color(0xFF4CAF50);
     default:
-      return Colors.grey; // 备用颜色
+      return Colors.grey;
   }
 }
 
-// 检查DateTime是否包含时间成分（不只是00:00:00）
 bool _hasTimeComponent(DateTime date) {
   return date.hour != 0 ||
       date.minute != 0 ||
@@ -358,7 +349,6 @@ bool _hasTimeComponent(DateTime date) {
       date.microsecond != 0;
 }
 
-// 格式化时间为HH:mm格式
 String _formatTime(DateTime date) {
   return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
 }

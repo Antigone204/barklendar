@@ -1,10 +1,14 @@
 // main.dart
 
+import 'dart:io'; // 1. 引入 IO 库用于检测平台
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+// 2. 引入 window_manager
+import 'package:window_manager/window_manager.dart';
+
 import 'package:ai_smart_calendar/theme/app_theme.dart' as app_theme;
 import 'package:ai_smart_calendar/services/hive_service.dart';
 import 'package:ai_smart_calendar/services/notification_service.dart';
@@ -27,6 +31,29 @@ void main() async {
   debugPrint('WidgetsFlutterBinding ensured');
 
   try {
+    // -------------------------------------------------------------
+    // 3. 窗口管理器配置 (仅在桌面端执行)
+    // -------------------------------------------------------------
+    if (!kIsWeb &&
+        (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+      await windowManager.ensureInitialized();
+
+      WindowOptions windowOptions = const WindowOptions(
+        size: Size(1024, 768), // 默认启动大小
+        minimumSize: Size(400, 300), // 【关键修复】：限制最小尺寸，防止布局崩溃
+        center: true, // 启动时居中
+        backgroundColor: Colors.transparent,
+        skipTaskbar: false,
+        titleBarStyle: TitleBarStyle.normal,
+      );
+
+      windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      });
+    }
+    // -------------------------------------------------------------
+
     // 初始化流程保持简单
     await HiveService.init();
     debugPrint('Hive initialized successfully');
