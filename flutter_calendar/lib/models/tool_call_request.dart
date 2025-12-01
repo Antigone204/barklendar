@@ -21,7 +21,7 @@ class ToolCallRequest {
 
   // toJson method for serialization
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'toolName': toolName,
       'functionName': functionName,
       'parameters': parameters,

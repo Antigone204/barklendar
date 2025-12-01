@@ -2,23 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_smart_calendar/providers/ai_config_provider.dart';
-import 'package:ai_smart_calendar/utils/app_routes.dart';
 import 'package:ai_smart_calendar/services/ai_client.dart';
-import 'package:ai_smart_calendar/pages/ai_service_detail_page.dart';
 
 class AiConfigListPage extends ConsumerWidget {
   const AiConfigListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final aiConfigState = ref.watch(aiConfigProvider);
+    final AsyncValue<AiConfigState> aiConfigState = ref.watch(aiConfigProvider);
 
     return aiConfigState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('加载失败: $error')),
-      data: (state) {
-        final configs = state.configs;
-        final activeConfigId = state.activeConfigId;
+      error: (Object error, StackTrace stack) => Center(child: Text('加载失败: $error')),
+      data: (AiConfigState state) {
+        final List<Map<String, String>> configs = state.configs;
+        final String activeConfigId = state.activeConfigId;
 
         return Scaffold(
           appBar: AppBar(
@@ -31,17 +29,17 @@ class AiConfigListPage extends ConsumerWidget {
                 )
               : ListView.builder(
                   itemCount: configs.length,
-                  itemBuilder: (context, index) {
-                    final config = configs[index];
-                    final isActive = config['id'] == activeConfigId;
+                  itemBuilder: (BuildContext context, int index) {
+                    final Map<String, String> config = configs[index];
+                    final bool isActive = config['id'] == activeConfigId;
 
                     return Card(
                       margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
+                          horizontal: 16, vertical: 4,),
                       child: ListTile(
                         leading: isActive
                             ? const Icon(Icons.check_circle,
-                                color: Colors.green)
+                                color: Colors.green,)
                             : const Icon(Icons.circle_outlined),
                         title: Text(
                           config['name'] ?? '未命名配置',
@@ -52,9 +50,9 @@ class AiConfigListPage extends ConsumerWidget {
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                          children: <Widget>[
                             Text(
-                                '类型: ${_getServiceTypeName(config[AiConfigKeys.type])}'),
+                                '类型: ${_getServiceTypeName(config[AiConfigKeys.type])}',),
                             if (config[AiConfigKeys.model]?.isNotEmpty == true)
                               Text('模型: ${config[AiConfigKeys.model]}'),
                             if (config[AiConfigKeys.url]?.isNotEmpty == true)
@@ -63,7 +61,7 @@ class AiConfigListPage extends ConsumerWidget {
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [
+                          children: <Widget>[
                             IconButton(
                               icon: const Icon(Icons.edit),
                               onPressed: () {
@@ -122,21 +120,21 @@ class AiConfigListPage extends ConsumerWidget {
   }
 
   void _navigateToFormPage(BuildContext context,
-      {Map<String, String>? config}) {
+      {Map<String, String>? config,}) {
     context.pushNamed('ai_service_detail', extra: config);
   }
 
   void _showDeleteDialog(
-      BuildContext context, WidgetRef ref, Map<String, String> config) {
+      BuildContext context, WidgetRef ref, Map<String, String> config,) {
     // 保存页面的 context，以便在对话框关闭后使用
-    final pageContext = context;
+    final BuildContext pageContext = context;
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('删除配置'),
           content: Text('确定要删除 "${config['name']}" 配置吗？'),
-          actions: [
+          actions: <Widget>[
             TextButton(
               onPressed: () {
                 if (dialogContext.canPop()) {

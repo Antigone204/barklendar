@@ -5,7 +5,6 @@ import 'package:ai_smart_calendar/widgets/todo_card.dart';
 import 'package:ai_smart_calendar/providers/tasks_provider.dart';
 import 'package:ai_smart_calendar/l10n/app_localizations.dart';
 import 'package:ai_smart_calendar/utils/route_utils.dart';
-import 'package:go_router/go_router.dart';
 
 class TaskListPage extends ConsumerWidget {
   const TaskListPage({super.key});
@@ -26,7 +25,7 @@ class TaskListPage extends ConsumerWidget {
         children: <Widget>[
           // 待办任务部分
           _buildSectionHeader(
-              context, AppLocalizations.of(context)!.pendingTasks),
+              context, AppLocalizations.of(context)!.pendingTasks,),
           ...state.pending.map(
             (TaskModel task) => TodoCard(
               task: task,
@@ -42,7 +41,7 @@ class TaskListPage extends ConsumerWidget {
           ),
           // 已完成任务部分
           _buildSectionHeader(
-              context, AppLocalizations.of(context)!.completedTasks),
+              context, AppLocalizations.of(context)!.completedTasks,),
           ...state.completed.map(
             (TaskModel task) => TodoCard(
               task: task,

@@ -59,6 +59,8 @@ dependencies:
   flex_color_scheme: ^8.0.0
   flutter_timezone: ^5.0.1
 
+  riverpod: any
+  path_provider: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

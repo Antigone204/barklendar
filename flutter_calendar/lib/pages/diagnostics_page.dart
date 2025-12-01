@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ai_smart_calendar/theme/app_theme.dart';
 import 'package:ai_smart_calendar/main.dart' show themeNotifierProvider;
 
 class DiagnosticsPage extends ConsumerWidget {
@@ -15,7 +14,7 @@ class DiagnosticsPage extends ConsumerWidget {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+          children: <Widget>[
             const Text(
               'This container color comes from Theme.of(context).primaryColor:',
               textAlign: TextAlign.center,
@@ -39,7 +38,7 @@ class DiagnosticsPage extends ConsumerWidget {
             Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: [
+              children: <Widget>[
                 _buildColorButton(ref, Colors.red, 'Red'),
                 _buildColorButton(ref, Colors.blue, 'Blue'),
                 _buildColorButton(ref, Colors.green, 'Green'),
@@ -49,25 +48,25 @@ class DiagnosticsPage extends ConsumerWidget {
                 _buildColorButton(ref, Colors.teal, 'Teal'),
                 _buildColorButton(ref, Colors.indigo, 'Indigo'),
                 _buildColorButton(
-                    ref, const Color(0xFFE91E63), 'Pink (E91E63)'),
+                    ref, const Color(0xFFE91E63), 'Pink (E91E63)',),
                 _buildColorButton(
-                    ref, const Color(0xFF9C27B0), 'Purple (9C27B0)'),
+                    ref, const Color(0xFF9C27B0), 'Purple (9C27B0)',),
                 _buildColorButton(
-                    ref, const Color(0xFF3F51B5), 'Indigo (3F51B5)'),
+                    ref, const Color(0xFF3F51B5), 'Indigo (3F51B5)',),
                 _buildColorButton(
-                    ref, const Color(0xFF2196F3), 'Blue (2196F3)'),
+                    ref, const Color(0xFF2196F3), 'Blue (2196F3)',),
                 _buildColorButton(
-                    ref, const Color(0xFF00BCD4), 'Cyan (00BCD4)'),
+                    ref, const Color(0xFF00BCD4), 'Cyan (00BCD4)',),
                 _buildColorButton(
-                    ref, const Color(0xFF4CAF50), 'Green (4CAF50)'),
+                    ref, const Color(0xFF4CAF50), 'Green (4CAF50)',),
                 _buildColorButton(
-                    ref, const Color(0xFFFFC107), 'Amber (FFC107)'),
+                    ref, const Color(0xFFFFC107), 'Amber (FFC107)',),
                 _buildColorButton(
-                    ref, const Color(0xFFFF9800), 'Orange (FF9800)'),
+                    ref, const Color(0xFFFF9800), 'Orange (FF9800)',),
                 _buildColorButton(
-                    ref, const Color(0xFF795548), 'Brown (795548)'),
+                    ref, const Color(0xFF795548), 'Brown (795548)',),
                 _buildColorButton(
-                    ref, const Color(0xFF607D8B), 'Blue Grey (607D8B)'),
+                    ref, const Color(0xFF607D8B), 'Blue Grey (607D8B)',),
               ],
             ),
 
@@ -83,7 +82,7 @@ class DiagnosticsPage extends ConsumerWidget {
 
             // 【新增】显示当前引擎状态的文本
             Text(
-                'Current Engine: ${ref.watch(themeNotifierProvider).useFlexColorScheme ? "FlexColorScheme" : "Native"}'),
+                'Current Engine: ${ref.watch(themeNotifierProvider).useFlexColorScheme ? "FlexColorScheme" : "Native"}',),
           ],
         ),
       ),

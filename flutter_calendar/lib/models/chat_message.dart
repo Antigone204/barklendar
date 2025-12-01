@@ -11,7 +11,7 @@ class ChatMessage {
 
   // 转换为OpenAI API格式
   Map<String, dynamic> toOpenAIMessage() {
-    return {
+    return <String, dynamic>{
       'role': role,
       'content': content,
     };
@@ -28,7 +28,7 @@ class ChatMessage {
 
   // 转换为JSON
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'role': role,
       'content': content,
       'timestamp': timestamp.toIso8601String(),

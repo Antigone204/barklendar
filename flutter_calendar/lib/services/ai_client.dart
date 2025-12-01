@@ -27,8 +27,8 @@ abstract class AiClient {
   bool isDone(String data) => data.trim() == '[DONE]';
 
   Map<String, dynamic> generateRequestBody(
-      List<Map<String, dynamic>> messages) {
-    return {
+      List<Map<String, dynamic>> messages,) {
+    return <String, dynamic>{
       'model': model,
       'messages': messages,
       'stream': true,
@@ -39,12 +39,12 @@ abstract class AiClient {
     if (line.trim().isEmpty) return null;
 
     if (line.startsWith('data: ')) {
-      final data = line.substring(6);
+      final String data = line.substring(6);
       if (isDone(data)) return null;
 
       try {
-        final json = jsonDecode(data) as Map<String, dynamic>;
-        final content = extractContent(json);
+        final Map<String, dynamic> json = jsonDecode(data) as Map<String, dynamic>;
+        final String? content = extractContent(json);
         return content;
       } catch (e) {
         throw Exception('Parse error: $e\nData: $data');
@@ -57,50 +57,50 @@ abstract class AiClient {
 
   /// 测试AI服务连接
   Future<Map<String, dynamic>> testConnection() async {
-    final dio = AiDio.instance.dio;
+    final Dio dio = AiDio.instance.dio;
 
     try {
       // 发送一个简单的测试消息
-      final testMessages = [
-        {
+      final List<Map<String, String>> testMessages = <Map<String, String>>[
+        <String, String>{
           'role': 'user',
-          'content': 'Hello, please respond with "OK" to confirm connection.'
+          'content': 'Hello, please respond with "OK" to confirm connection.',
         }
       ];
 
       // 处理URL路径，确保使用正确的API端点
-      final apiUrl =
+      final String apiUrl =
           url.endsWith('/chat/completions') ? url : '$url/chat/completions';
 
-      final response = await dio.post(
+      final Response response = await dio.post(
         apiUrl,
         options: Options(
           headers: getHeaders(),
-          validateStatus: (status) => true,
+          validateStatus: (int? status) => true,
         ),
         data: generateRequestBody(testMessages),
       );
 
       if (response.statusCode == 200) {
-        return {
+        return <String, dynamic>{
           'success': true,
           'message': '连接成功',
           'statusCode': response.statusCode,
         };
       } else if (response.statusCode == 401) {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': 'API密钥无效',
           'statusCode': response.statusCode,
         };
       } else if (response.statusCode == 404) {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': 'API端点不存在',
           'statusCode': response.statusCode,
         };
       } else {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': '连接失败 (状态码: ${response.statusCode})',
           'statusCode': response.statusCode,
@@ -108,32 +108,32 @@ abstract class AiClient {
       }
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout) {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': '连接超时',
           'error': e.toString(),
         };
       } else if (e.type == DioExceptionType.receiveTimeout) {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': '接收超时',
           'error': e.toString(),
         };
       } else if (e.type == DioExceptionType.connectionError) {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': '网络连接错误',
           'error': e.toString(),
         };
       } else {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': '连接错误: ${e.message}',
           'error': e.toString(),
         };
       }
     } catch (e) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': '未知错误: $e',
         'error': e.toString(),

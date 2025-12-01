@@ -12,22 +12,22 @@ class AiFactory {
     Map<String, String> config,
   ) {
     // 检查配置中的type字段，如果为'generic'则使用通用客户端
-    final type = config[AiConfigKeys.type];
+    final String? type = config[AiConfigKeys.type];
     if (type == 'generic') {
       return genericGenerateStream(messages, config);
     }
 
     switch (identifier) {
-      case "openai":
+      case 'openai':
         return openAiGenerateStream(messages, config);
-      case "claude":
+      case 'claude':
         return claudeGenerateStream(messages, config);
-      case "gemini":
+      case 'gemini':
         return geminiGenerateStream(messages, config);
-      case "deepseek":
+      case 'deepseek':
         return deepSeekGenerateStream(messages, config);
       default:
-        throw Exception("Invalid AI identifier: $identifier");
+        throw Exception('Invalid AI identifier: $identifier');
     }
   }
 }
@@ -36,7 +36,7 @@ Stream<String> openAiGenerateStream(
   List<Map<String, dynamic>> messages,
   Map<String, String> config,
 ) {
-  final client = OpenAiClient(config);
+  final OpenAiClient client = OpenAiClient(config);
   return client.generateStream(messages);
 }
 
@@ -44,7 +44,7 @@ Stream<String> claudeGenerateStream(
   List<Map<String, dynamic>> messages,
   Map<String, String> config,
 ) {
-  final client = ClaudeClient(config);
+  final ClaudeClient client = ClaudeClient(config);
   return client.generateStream(messages);
 }
 
@@ -52,7 +52,7 @@ Stream<String> geminiGenerateStream(
   List<Map<String, dynamic>> messages,
   Map<String, String> config,
 ) {
-  final client = GeminiClient(config);
+  final GeminiClient client = GeminiClient(config);
   return client.generateStream(messages);
 }
 
@@ -60,7 +60,7 @@ Stream<String> deepSeekGenerateStream(
   List<Map<String, dynamic>> messages,
   Map<String, String> config,
 ) {
-  final client = DeepSeekClient(config);
+  final DeepSeekClient client = DeepSeekClient(config);
   return client.generateStream(messages);
 }
 
@@ -68,6 +68,6 @@ Stream<String> genericGenerateStream(
   List<Map<String, dynamic>> messages,
   Map<String, String> config,
 ) {
-  final client = GenericOpenAiCompatibleClient(config);
+  final GenericOpenAiCompatibleClient client = GenericOpenAiCompatibleClient(config);
   return client.generateStream(messages);
 }

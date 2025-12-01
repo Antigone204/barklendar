@@ -8,13 +8,13 @@ abstract class IntentResult {
 
 class CreateTaskSuccess extends IntentResult {
   final TaskModel task;
-  CreateTaskSuccess(String responseMessage, this.task) : super(responseMessage);
+  CreateTaskSuccess(super.responseMessage, this.task);
 }
 
 class GeneralResponse extends IntentResult {
-  GeneralResponse(String responseMessage) : super(responseMessage);
+  GeneralResponse(super.responseMessage);
 }
 
 class IntentError extends IntentResult {
-  IntentError(String responseMessage) : super(responseMessage);
+  IntentError(super.responseMessage);
 }

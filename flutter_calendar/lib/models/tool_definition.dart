@@ -1,4 +1,3 @@
-import 'package:ai_smart_calendar/models/task_model.dart';
 
 class ToolDefinition {
   final String name; // 工具名称，如 "calendar"
@@ -13,13 +12,13 @@ class ToolDefinition {
 
   // 转换为JSON Schema格式（用于OpenAI等模型）
   Map<String, dynamic> toJsonSchema() {
-    return {
+    return <String, dynamic>{
       'type': 'object',
-      'properties': {
-        'name': {'type': 'string', 'description': description},
-        'functions': {
+      'properties': <String, Map<String, Object>>{
+        'name': <String, String>{'type': 'string', 'description': description},
+        'functions': <String, Object>{
           'type': 'array',
-          'items': functions.map((f) => f.toJsonSchema()).toList(),
+          'items': functions.map((FunctionDefinition f) => f.toJsonSchema()).toList(),
         },
       },
     };
@@ -38,7 +37,7 @@ class FunctionDefinition {
   });
 
   Map<String, dynamic> toJsonSchema() {
-    return {
+    return <String, dynamic>{
       'name': name,
       'description': description,
       'parameters': parameters,
@@ -53,43 +52,43 @@ class ToolDefinitionFactory {
     return ToolDefinition(
       name: 'calendar',
       description: '帮助用户管理日历事件、任务和日程安排。可以创建、查找、更新、删除事件，并支持优先级、重复模式、提醒等功能。',
-      functions: [
+      functions: <FunctionDefinition>[
         FunctionDefinition(
           name: 'create_event',
           description: '在用户日历中创建新事件或任务',
           parameters: const <String, dynamic>{
             'type': 'object',
-            'properties': const <String, dynamic>{
-              'title': {'type': 'string', 'description': '事件标题（必需）'},
-              'description': {'type': 'string', 'description': '事件详细描述'},
-              'dueDate': {
+            'properties': <String, dynamic>{
+              'title': <String, String>{'type': 'string', 'description': '事件标题（必需）'},
+              'description': <String, String>{'type': 'string', 'description': '事件详细描述'},
+              'dueDate': <String, String>{
                 'type': 'string',
-                'description': '截止日期，ISO 8601格式（必需）'
+                'description': '截止日期，ISO 8601格式（必需）',
               },
-              'priority': {
+              'priority': <String, Object>{
                 'type': 'string',
-                'enum': ['low', 'medium', 'high', 'urgent'],
-                'description': '优先级'
+                'enum': <String>['low', 'medium', 'high', 'urgent'],
+                'description': '优先级',
               },
-              'categoryId': {'type': 'string', 'description': '分类ID'},
-              'tags': {
+              'categoryId': <String, String>{'type': 'string', 'description': '分类ID'},
+              'tags': <String, Object>{
                 'type': 'array',
-                'items': {'type': 'string'},
-                'description': '标签列表'
+                'items': <String, String>{'type': 'string'},
+                'description': '标签列表',
               },
-              'reminderTime': {
+              'reminderTime': <String, String>{
                 'type': 'string',
-                'description': '提醒时间，ISO 8601格式'
+                'description': '提醒时间，ISO 8601格式',
               },
-              'hasNotification': {'type': 'boolean', 'description': '是否启用通知'},
-              'location': {'type': 'string', 'description': '事件地点'},
-              'recurrence': {
+              'hasNotification': <String, String>{'type': 'boolean', 'description': '是否启用通知'},
+              'location': <String, String>{'type': 'string', 'description': '事件地点'},
+              'recurrence': <String, Object>{
                 'type': 'string',
-                'enum': ['none', 'daily', 'weekly', 'monthly', 'yearly'],
-                'description': '重复模式'
+                'enum': <String>['none', 'daily', 'weekly', 'monthly', 'yearly'],
+                'description': '重复模式',
               },
             },
-            'required': ['title', 'dueDate'],
+            'required': <String>['title', 'dueDate'],
           },
         ),
         FunctionDefinition(
@@ -97,12 +96,12 @@ class ToolDefinitionFactory {
           description: '根据日期、分类、状态等条件查找事件',
           parameters: const <String, dynamic>{
             'type': 'object',
-            'properties': const <String, dynamic>{
-              'date': {'type': 'string', 'description': '查询特定日期的事件，ISO 8601格式'},
-              'categoryId': {'type': 'string', 'description': '按分类筛选'},
-              'completed': {'type': 'boolean', 'description': '是否已完成'},
-              'pending': {'type': 'boolean', 'description': '是否待完成'},
-              'overdue': {'type': 'boolean', 'description': '是否过期'},
+            'properties': <String, dynamic>{
+              'date': <String, String>{'type': 'string', 'description': '查询特定日期的事件，ISO 8601格式'},
+              'categoryId': <String, String>{'type': 'string', 'description': '按分类筛选'},
+              'completed': <String, String>{'type': 'boolean', 'description': '是否已完成'},
+              'pending': <String, String>{'type': 'boolean', 'description': '是否待完成'},
+              'overdue': <String, String>{'type': 'boolean', 'description': '是否过期'},
             },
           },
         ),
@@ -111,20 +110,20 @@ class ToolDefinitionFactory {
           description: '更新现有事件的详细信息',
           parameters: const <String, dynamic>{
             'type': 'object',
-            'properties': const <String, dynamic>{
-              'id': {'type': 'string', 'description': '事件ID（必需）'},
-              'title': {'type': 'string', 'description': '事件标题'},
-              'description': {'type': 'string', 'description': '事件详细描述'},
-              'dueDate': {'type': 'string', 'description': '截止日期，ISO 8601格式'},
-              'priority': {
+            'properties': <String, dynamic>{
+              'id': <String, String>{'type': 'string', 'description': '事件ID（必需）'},
+              'title': <String, String>{'type': 'string', 'description': '事件标题'},
+              'description': <String, String>{'type': 'string', 'description': '事件详细描述'},
+              'dueDate': <String, String>{'type': 'string', 'description': '截止日期，ISO 8601格式'},
+              'priority': <String, Object>{
                 'type': 'string',
-                'enum': ['low', 'medium', 'high', 'urgent'],
-                'description': '优先级'
+                'enum': <String>['low', 'medium', 'high', 'urgent'],
+                'description': '优先级',
               },
-              'categoryId': {'type': 'string', 'description': '分类ID'},
-              'isCompleted': {'type': 'boolean', 'description': '是否已完成'},
+              'categoryId': <String, String>{'type': 'string', 'description': '分类ID'},
+              'isCompleted': <String, String>{'type': 'boolean', 'description': '是否已完成'},
             },
-            'required': ['id'],
+            'required': <String>['id'],
           },
         ),
         FunctionDefinition(
@@ -132,10 +131,10 @@ class ToolDefinitionFactory {
           description: '删除指定的事件',
           parameters: const <String, dynamic>{
             'type': 'object',
-            'properties': const <String, dynamic>{
-              'id': {'type': 'string', 'description': '要删除的事件ID（必需）'},
+            'properties': <String, dynamic>{
+              'id': <String, String>{'type': 'string', 'description': '要删除的事件ID（必需）'},
             },
-            'required': ['id'],
+            'required': <String>['id'],
           },
         ),
         FunctionDefinition(
@@ -143,10 +142,10 @@ class ToolDefinitionFactory {
           description: '获取单个事件的详细信息',
           parameters: const <String, dynamic>{
             'type': 'object',
-            'properties': const <String, dynamic>{
-              'id': {'type': 'string', 'description': '事件ID（必需）'},
+            'properties': <String, dynamic>{
+              'id': <String, String>{'type': 'string', 'description': '事件ID（必需）'},
             },
-            'required': ['id'],
+            'required': <String>['id'],
           },
         ),
         FunctionDefinition(
@@ -154,7 +153,7 @@ class ToolDefinitionFactory {
           description: '获取所有事件的列表',
           parameters: const <String, dynamic>{
             'type': 'object',
-            'properties': const <String, dynamic>{
+            'properties': <String, dynamic>{
               // 无参数，获取所有事件
             },
           },

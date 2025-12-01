@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_smart_calendar/theme/app_theme.dart' as app_theme;
 import 'package:ai_smart_calendar/main.dart';
-import 'package:ai_smart_calendar/pages/ai_settings_page.dart';
 import 'package:ai_smart_calendar/services/hive_service.dart';
 import 'package:ai_smart_calendar/utils/app_constants.dart';
 import 'package:ai_smart_calendar/utils/logger.dart';
@@ -40,21 +38,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     setState(() {
       _notificationsEnabled = HiveService.getSetting(
           AppConstants.notificationsEnabled,
-          defaultValue: AppConstants.defaultNotificationsEnabled) as bool;
+          defaultValue: AppConstants.defaultNotificationsEnabled,) as bool;
       _taskRemindersEnabled = HiveService.getSetting(
           AppConstants.taskRemindersEnabled,
-          defaultValue: AppConstants.defaultTaskRemindersEnabled) as bool;
+          defaultValue: AppConstants.defaultTaskRemindersEnabled,) as bool;
       _dailyDigestEnabled = HiveService.getSetting(
           AppConstants.dailyDigestEnabled,
-          defaultValue: AppConstants.defaultDailyDigestEnabled) as bool;
+          defaultValue: AppConstants.defaultDailyDigestEnabled,) as bool;
 
       // 加载语言设置
       _language = HiveService.getSetting(AppConstants.languageSetting,
-          defaultValue: AppConstants.defaultLanguage) as String;
+          defaultValue: AppConstants.defaultLanguage,) as String;
     });
 
     // 日志输出：通知设置加载完成
-    Logger.logNotificationSettings('设置加载完成', {
+    Logger.logNotificationSettings('设置加载完成', <String, dynamic>{
       '通知启用': _notificationsEnabled,
       '任务提醒': _taskRemindersEnabled,
       '每日摘要': _dailyDigestEnabled,
@@ -78,7 +76,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
           // 通知设置
           _buildSectionHeader(
-              AppLocalizations.of(context)!.notificationSettings),
+              AppLocalizations.of(context)!.notificationSettings,),
           _buildNotificationSetting(),
           const SizedBox(height: 24),
 
@@ -149,8 +147,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       if (color == Colors.orange) return AppLocalizations.of(context)!.orange;
       if (color == Colors.purple) return AppLocalizations.of(context)!.purple;
       if (color == Colors.pink) return AppLocalizations.of(context)!.pink;
-      if (color == Colors.blueAccent)
+      if (color == Colors.blueAccent) {
         return AppLocalizations.of(context)!.blueAccent;
+      }
       if (color == Colors.cyan) return AppLocalizations.of(context)!.cyan;
       if (color == Colors.red) return AppLocalizations.of(context)!.red;
       return AppLocalizations.of(context)!.customColor;
@@ -192,7 +191,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 );
 
                 HiveService.saveSetting(
-                    AppConstants.notificationsEnabled, value);
+                    AppConstants.notificationsEnabled, value,);
                 setState(() {
                   _notificationsEnabled = value;
                   // 如果总开关关闭，自动关闭所有子开关
@@ -200,9 +199,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     _taskRemindersEnabled = false;
                     _dailyDigestEnabled = false;
                     HiveService.saveSetting(
-                        AppConstants.taskRemindersEnabled, false);
+                        AppConstants.taskRemindersEnabled, false,);
                     HiveService.saveSetting(
-                        AppConstants.dailyDigestEnabled, false);
+                        AppConstants.dailyDigestEnabled, false,);
                   }
                 });
               },
@@ -232,7 +231,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         );
 
                         HiveService.saveSetting(
-                            AppConstants.taskRemindersEnabled, value);
+                            AppConstants.taskRemindersEnabled, value,);
                         setState(() {
                           _taskRemindersEnabled = value;
                         });
@@ -262,7 +261,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         );
 
                         HiveService.saveSetting(
-                            AppConstants.dailyDigestEnabled, value);
+                            AppConstants.dailyDigestEnabled, value,);
                         setState(() {
                           _dailyDigestEnabled = value;
                         });
@@ -417,7 +416,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // 从 Provider 获取初始颜色
     Color pickedColor = themeNotifier.primaryColor;
     // 保存页面的 context，以便在对话框关闭后使用
-    final pageContext = context;
+    final BuildContext pageContext = context;
 
     await showDialog<void>(
       context: context,
@@ -430,7 +429,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     // 颜色预览框
                     Container(
                       width: 80,
@@ -471,7 +470,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ScaffoldMessenger.of(pageContext).showSnackBar(
                       SnackBar(
                           content: Text(
-                              AppLocalizations.of(pageContext)!.themeColorUpdated)),
+                              AppLocalizations.of(pageContext)!.themeColorUpdated,),),
                     );
                   },
                 ),
@@ -605,7 +604,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // TODO: 实现数据备份
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(AppLocalizations.of(context)!.backupInDevelopment)),
+          content: Text(AppLocalizations.of(context)!.backupInDevelopment),),
     );
   }
 
@@ -613,7 +612,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // TODO: 实现数据恢复
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(AppLocalizations.of(context)!.restoreInDevelopment)),
+          content: Text(AppLocalizations.of(context)!.restoreInDevelopment),),
     );
   }
 
@@ -625,7 +624,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             Text(AppLocalizations.of(context)!.clearDataConfirmation),
             const SizedBox(height: 16),
             Text(
@@ -660,7 +659,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               _buildClearOption(
                 icon: Icons.smart_toy,
                 title: '仅清除AI数据',
@@ -743,7 +742,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _clearAIData() async {
     Navigator.pop(context); // 关闭选项对话框
-    final result = await _showConfirmDialog('清除AI数据', '确定要清除所有AI配置、提示词和聊天记录吗？');
+    final bool result = await _showConfirmDialog('清除AI数据', '确定要清除所有AI配置、提示词和聊天记录吗？');
     if (result) {
       // 1. 调用修复后的清除服务
       await HiveService.clearAIData(ref);
@@ -759,7 +758,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _clearTaskData() async {
     Navigator.pop(context);
-    final result = await _showConfirmDialog('清除任务数据', '确定要清除所有日程任务吗？此操作不可撤销。');
+    final bool result = await _showConfirmDialog('清除任务数据', '确定要清除所有日程任务吗？此操作不可撤销。');
     if (result) {
       await HiveService.clearTaskData();
 
@@ -773,7 +772,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _clearUserCategories() async {
     Navigator.pop(context);
-    final result =
+    final bool result =
         await _showConfirmDialog('清除自定义分类', '确定要清除所有用户创建的分类吗？默认分类将保留。');
     if (result) {
       await HiveService.clearUserCategories();
@@ -783,7 +782,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _clearAppSettings() async {
     Navigator.pop(context);
-    final result = await _showConfirmDialog('清除应用设置', '确定要清除所有应用设置吗？AI配置将保留。');
+    final bool result = await _showConfirmDialog('清除应用设置', '确定要清除所有应用设置吗？AI配置将保留。');
     if (result) {
       await HiveService.clearAppSettings();
       _showSuccessMessage('应用设置已清除');
@@ -792,7 +791,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _clearCacheData() async {
     Navigator.pop(context);
-    final result = await _showConfirmDialog('清除缓存', '确定要清除所有缓存数据吗？');
+    final bool result = await _showConfirmDialog('清除缓存', '确定要清除所有缓存数据吗？');
     if (result) {
       await HiveService.clearCacheData();
       _showSuccessMessage('缓存已清除');
@@ -801,7 +800,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _clearAllData() async {
     Navigator.pop(context);
-    final result =
+    final bool result =
         await _showConfirmDialog('清除所有数据', '确定要完全重置应用吗？所有数据将被删除，此操作不可撤销！');
     if (result) {
       await HiveService.clearAllData(ref);
@@ -810,7 +809,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<bool> _showConfirmDialog(String title, String message) async {
-    final result = await showDialog<bool>(
+    final bool? result = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: Text(title),
@@ -881,7 +880,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // TODO: 发送反馈
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(AppLocalizations.of(context)!.feedbackInDevelopment)),
+          content: Text(AppLocalizations.of(context)!.feedbackInDevelopment),),
     );
   }
 
@@ -894,10 +893,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   // 自定义色调滑块组件
   Widget _buildHueSlider(
-      Color currentColor, ValueChanged<Color> onColorChanged) {
+      Color currentColor, ValueChanged<Color> onColorChanged,) {
     // 获取当前颜色的色调值
     final HSVColor hsvColor = HSVColor.fromColor(currentColor);
-    double hue = hsvColor.hue;
+    final double hue = hsvColor.hue;
 
     return Container(
       width: 300, // 固定宽度，避免布局约束问题
@@ -905,7 +904,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         gradient: const LinearGradient(
-          colors: [
+          colors: <Color>[
             Color(0xFFFF0000), // 红
             Color(0xFFFFFF00), // 黄
             Color(0xFF00FF00), // 绿
@@ -914,24 +913,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             Color(0xFFFF00FF), // 紫
             Color(0xFFFF0000), // 红（回到起点）
           ],
-          stops: [0.0, 0.17, 0.33, 0.5, 0.67, 0.83, 1.0],
+          stops: <double>[0.0, 0.17, 0.33, 0.5, 0.67, 0.83, 1.0],
         ),
       ),
       child: Stack(
-        children: [
+        children: <Widget>[
           Positioned.fill(
             child: GestureDetector(
-              onPanUpdate: (details) {
+              onPanUpdate: (DragUpdateDetails details) {
                 _handleColorSelection(
-                    details.localPosition.dx, 300, onColorChanged);
+                    details.localPosition.dx, 300, onColorChanged,);
               },
-              onPanDown: (details) {
+              onPanDown: (DragDownDetails details) {
                 _handleColorSelection(
-                    details.localPosition.dx, 300, onColorChanged);
+                    details.localPosition.dx, 300, onColorChanged,);
               },
-              onTapDown: (details) {
+              onTapDown: (TapDownDetails details) {
                 _handleColorSelection(
-                    details.localPosition.dx, 300, onColorChanged);
+                    details.localPosition.dx, 300, onColorChanged,);
               },
             ),
           ),
@@ -945,8 +944,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
-                border: Border.all(color: Colors.black, width: 2),
-                boxShadow: [
+                border: Border.all(width: 2),
+                boxShadow: <BoxShadow>[
                   BoxShadow(
                     color: Colors.black.withOpacity(0.3),
                     blurRadius: 4,
@@ -962,7 +961,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _handleColorSelection(
-      double localX, double sliderWidth, ValueChanged<Color> onColorChanged) {
+      double localX, double sliderWidth, ValueChanged<Color> onColorChanged,) {
     // 确保触摸位置在滑块范围内
     final double clampedX = localX.clamp(0.0, sliderWidth);
 

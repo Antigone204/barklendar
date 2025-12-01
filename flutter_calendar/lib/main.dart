@@ -4,8 +4,6 @@ import 'dart:io'; // 1. 引入 IO 库用于检测平台
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:go_router/go_router.dart';
 // 2. 引入 window_manager
 import 'package:window_manager/window_manager.dart';
 
@@ -20,8 +18,8 @@ import 'package:ai_smart_calendar/l10n/app_localizations.dart';
 import 'package:ai_smart_calendar/providers/locale_provider.dart';
 
 // 主题 Provider 保持不变
-final themeNotifierProvider =
-    ChangeNotifierProvider<app_theme.ThemeNotifier>((ref) {
+final ChangeNotifierProvider<app_theme.ThemeNotifier> themeNotifierProvider =
+    ChangeNotifierProvider<app_theme.ThemeNotifier>((ChangeNotifierProviderRef<app_theme.ThemeNotifier> ref) {
   return app_theme.ThemeNotifier();
 });
 
@@ -38,7 +36,7 @@ void main() async {
         (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
       await windowManager.ensureInitialized();
 
-      WindowOptions windowOptions = const WindowOptions(
+      final WindowOptions windowOptions = const WindowOptions(
         size: Size(1024, 768), // 默认启动大小
         minimumSize: Size(400, 300), // 【关键修复】：限制最小尺寸，防止布局崩溃
         center: true, // 启动时居中
@@ -90,7 +88,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     // 这是在 initState 中安全触发副作用的标准做法
     Future.microtask(() {
       debugPrint(
-          "AppInitializer: Triggering startup processing after first frame.");
+          'AppInitializer: Triggering startup processing after first frame.',);
       // 我们只读取 Provider 来获取实例，然后调用方法
       ref.read(lifecycleManagerProvider).processTaskNotificationsOnStartup();
     });
@@ -108,11 +106,11 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeNotifier = ref.watch(themeNotifierProvider);
-    final currentLocale = ref.watch(localeNotifierProvider);
-    final lightTheme =
+    final app_theme.ThemeNotifier themeNotifier = ref.watch(themeNotifierProvider);
+    final Locale currentLocale = ref.watch(localeNotifierProvider);
+    final ThemeData lightTheme =
         ThemeDao.colorSchema(themeNotifier, context, Brightness.light);
-    final darkTheme =
+    final ThemeData darkTheme =
         ThemeDao.colorSchema(themeNotifier, context, Brightness.dark);
 
     return MaterialApp.router(

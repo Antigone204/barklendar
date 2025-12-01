@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -26,11 +25,11 @@ class NotificationService {
     tz.initializeTimeZones();
 
     // 1. 使用 var 让 Dart 自己推断类型（不管它是 String 还是 TimezoneInfo）
-    var timeZoneResult = await FlutterTimezone.getLocalTimezone();
+    final TimezoneInfo timeZoneResult = await FlutterTimezone.getLocalTimezone();
 
     // 2. 无论它返回什么，都强转成 String (通过 .toString())
     // 这样能兼容 String 和可能出现的对象类型
-    String timeZoneName = timeZoneResult.toString();
+    final String timeZoneName = timeZoneResult.toString();
 
     try {
       tz.setLocalLocation(tz.getLocation(timeZoneName));
@@ -47,11 +46,8 @@ class NotificationService {
 
     // **【核心修复】** 为 iOS 和 macOS 设置初始化参数，并明确开启前台通知权限
     final DarwinInitializationSettings initializationSettingsDarwin =
-        DarwinInitializationSettings(
-      // **明确告诉插件，当应用在前台时，也需要显示横幅、声音和角标**
-      defaultPresentAlert: true,
-      defaultPresentBadge: true,
-      defaultPresentSound: true,
+        const DarwinInitializationSettings(
+      
     );
 
     // 组合各平台的初始化设置
@@ -81,7 +77,7 @@ class NotificationService {
     await _createAndroidNotificationChannels();
 
     debugPrint(
-        'Notification Service Initialized with foreground presentation options.');
+        'Notification Service Initialized with foreground presentation options.',);
   }
 
   // 创建 Android 通知渠道
@@ -302,7 +298,7 @@ class NotificationService {
     } else {
       // 其他平台默认认为有权限
       debugPrint(
-          'Platform is not iOS, macOS, or Android. Assuming permission is granted.');
+          'Platform is not iOS, macOS, or Android. Assuming permission is granted.',);
       return true;
     }
 
@@ -325,7 +321,7 @@ class NotificationService {
     try {
       // 检查是否已经过期
       if (scheduledTime.isBefore(DateTime.now())) {
-        Logger.logNotificationSettings('定时通知调度失败', {
+        Logger.logNotificationSettings('定时通知调度失败', <String, dynamic>{
           '任务ID': task.id,
           '任务标题': task.title,
           '原因': '计划时间已过期',
@@ -370,14 +366,14 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
 
-      Logger.logNotificationSettings('定时通知调度成功', {
+      Logger.logNotificationSettings('定时通知调度成功', <String, dynamic>{
         '任务ID': task.id,
         '任务标题': task.title,
         '计划时间': scheduledTime.toString(),
         '通知ID': task.id.hashCode,
       });
     } catch (e) {
-      Logger.logNotificationSettings('定时通知调度失败', {
+      Logger.logNotificationSettings('定时通知调度失败', <String, dynamic>{
         '任务ID': task.id,
         '任务标题': task.title,
         '错误': e.toString(),
@@ -389,12 +385,12 @@ class NotificationService {
   static Future<void> cancelScheduledNotification(int id) async {
     try {
       await _notificationsPlugin.cancel(id);
-      Logger.logNotificationSettings('取消定时通知', {
+      Logger.logNotificationSettings('取消定时通知', <String, dynamic>{
         '通知ID': id,
         '操作': '成功',
       });
     } catch (e) {
-      Logger.logNotificationSettings('取消定时通知失败', {
+      Logger.logNotificationSettings('取消定时通知失败', <String, dynamic>{
         '通知ID': id,
         '错误': e.toString(),
       });
@@ -405,6 +401,6 @@ class NotificationService {
   static Future<bool> hasScheduledNotification(int id) async {
     final List<PendingNotificationRequest> pendingNotifications =
         await _notificationsPlugin.pendingNotificationRequests();
-    return pendingNotifications.any((notification) => notification.id == id);
+    return pendingNotifications.any((PendingNotificationRequest notification) => notification.id == id);
   }
 }

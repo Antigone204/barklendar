@@ -18,13 +18,12 @@ extension GoRouterExtensions on BuildContext {
       // 新增任务：使用 add_task 路由
       return pushNamed<T>(
         'add_task',
-        extra: null,
       );
     } else {
       // 编辑任务：使用 task_detail 路由
       return pushNamed<T>(
         'task_detail',
-        pathParameters: {'taskId': task.id},
+        pathParameters: <String, String>{'taskId': task.id},
         extra: task,
       );
     }

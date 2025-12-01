@@ -47,7 +47,7 @@ final Provider<CalendarToolService> calendarToolServiceProvider =
 // Tool Registry Service Provider
 final Provider<ToolRegistryService> toolRegistryServiceProvider =
     Provider<ToolRegistryService>((ProviderRef<ToolRegistryService> ref) {
-  final registry = ToolRegistryService();
+  final ToolRegistryService registry = ToolRegistryService();
 
   // 注册所有可用工具
   registry.registerTool(CalendarToolService.toolDefinition);
@@ -60,14 +60,14 @@ final Provider<ToolRegistryService> toolRegistryServiceProvider =
 });
 
 // AI Service Provider (实例化版本)
-final aiServiceProvider = Provider<AIService>((ref) {
+final Provider<AIService> aiServiceProvider = Provider<AIService>((ProviderRef<AIService> ref) {
   // 关键：使用 ref.watch() 来监听 activeAiConfigProvider 的状态！
-  final activeConfig = ref.watch(activeAiConfigProvider);
+  final Map<String, String>? activeConfig = ref.watch(activeAiConfigProvider);
 
   // ======================= 📍 探针 2 =======================
   developer.log(
       '[PROBE LOG] aiServiceProvider is being REBUILT. Active config ID from configProvider: ${activeConfig?['id']}',
-      name: 'probe.debug');
+      name: 'probe.debug',);
   // ========================================================
 
   // 安全检查：如果没有任何激活的配置，我们返回一个"哑"服务
@@ -84,7 +84,7 @@ final Provider<ToolCallingService> toolCallingServiceProvider =
     Provider<ToolCallingService>((ProviderRef<ToolCallingService> ref) {
   // ======================= 📍 探针 3 =======================
   developer.log('[PROBE LOG] toolCallingServiceProvider is being CREATED.',
-      name: 'probe.debug');
+      name: 'probe.debug',);
   // ========================================================
 
   final ToolRegistryService toolRegistry =

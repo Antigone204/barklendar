@@ -35,9 +35,9 @@ class AiChatV2State {
 }
 
 /// AI聊天 Provider - 全新的状态流管理器
-final aiChatProvider =
-    StateNotifierProvider<AiChatV2Notifier, AiChatV2State>((ref) {
-  final toolCallingService = ref.read(toolCallingServiceProvider);
+final StateNotifierProvider<AiChatV2Notifier, AiChatV2State> aiChatProvider =
+    StateNotifierProvider<AiChatV2Notifier, AiChatV2State>((StateNotifierProviderRef<AiChatV2Notifier, AiChatV2State> ref) {
+  final ToolCallingService toolCallingService = ref.read(toolCallingServiceProvider);
   return AiChatV2Notifier(toolCallingService: toolCallingService);
 });
 
@@ -49,7 +49,7 @@ class AiChatV2Notifier extends StateNotifier<AiChatV2State> {
     required ToolCallingService toolCallingService,
   })  : _toolCallingService = toolCallingService,
         super(const AiChatV2State(
-            messages: [], currentTurn: null, isLoading: false));
+            messages: <ChatMessage>[],),);
 
   /// 发送用户消息并开始AI交互（流式版本）
   Future<void> sendMessage(String userMessage) async {
@@ -58,15 +58,15 @@ class AiChatV2Notifier extends StateNotifier<AiChatV2State> {
     _currentStreamingContent = '';
 
     // 将用户消息立即添加到历史记录中
-    final userChatMessage = ChatMessage(
+    final ChatMessage userChatMessage = ChatMessage(
       role: 'user',
       content: userMessage,
       timestamp: DateTime.now(),
     );
-    state = state.copyWith(messages: [...state.messages, userChatMessage]);
+    state = state.copyWith(messages: <ChatMessage>[...state.messages, userChatMessage]);
 
     // 创建新的AI响应流
-    final turnStream = _toolCallingService.executeTurnStream(
+    final Stream<AiTurnState> turnStream = _toolCallingService.executeTurnStream(
       userMessage,
       history: state.messages,
     );
@@ -77,7 +77,7 @@ class AiChatV2Notifier extends StateNotifier<AiChatV2State> {
       state = state.copyWith(currentTurn: const AiTurnStateThinking());
 
       // 使用 await for 线性、顺序地处理流中的每一个状态
-      await for (final aiState in turnStream) {
+      await for (final AiTurnState aiState in turnStream) {
         // 将流中的每一个状态，实时更新到 state 中，供UI渲染
         state = state.copyWith(currentTurn: aiState);
 
@@ -87,17 +87,17 @@ class AiChatV2Notifier extends StateNotifier<AiChatV2State> {
               aiState.contentChunk; // 假设 contentChunk 是完整的累积内容
         }
       }
-    } catch (e, st) {
+    } catch (e) {
       // 如果流处理过程中发生错误，向UI报告错误状态
       state =
           state.copyWith(currentTurn: AiTurnStateError(message: e.toString()));
     } finally {
       // 当 await for 循环正常结束或因错误退出时，finally 块保证执行
-      var finalMessages = List<ChatMessage>.from(state.messages);
+      final List<ChatMessage> finalMessages = List<ChatMessage>.from(state.messages);
 
       // 只有当真实产生了流式内容时，才将其添加到最终的历史记录中
       if (_currentStreamingContent.isNotEmpty) {
-        final finalAiMessage = ChatMessage(
+        final ChatMessage finalAiMessage = ChatMessage(
           role: 'assistant',
           content: _currentStreamingContent,
           timestamp: DateTime.now(),
@@ -108,7 +108,6 @@ class AiChatV2Notifier extends StateNotifier<AiChatV2State> {
       // 执行最终的、原子性的状态更新
       state = state.copyWith(
         messages: finalMessages,
-        currentTurn: null, // 彻底清理临时状态
         isLoading: false,
       );
       _currentStreamingContent = ''; // 清理临时内容变量
@@ -117,19 +116,14 @@ class AiChatV2Notifier extends StateNotifier<AiChatV2State> {
 
   /// 清除聊天记录
   void clearMessages() {
-    state = const AiChatV2State(messages: []);
+    state = const AiChatV2State(messages: <ChatMessage>[]);
   }
 
   /// 取消当前交互
   void cancelCurrentInteraction() {
     state = state.copyWith(
       isLoading: false,
-      currentTurn: null,
     );
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }

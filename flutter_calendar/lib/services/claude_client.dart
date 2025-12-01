@@ -9,7 +9,7 @@ class ClaudeClient extends AiClient {
 
   @override
   Map<String, String> getHeaders() {
-    return {
+    return <String, String>{
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
@@ -33,9 +33,9 @@ class ClaudeClient extends AiClient {
   FutureOr<String?> processLine(String line) async {
     if (line.isEmpty || line.startsWith('event: ')) return null;
 
-    final data = line.startsWith('data: ') ? line.substring(6) : line;
+    final String data = line.startsWith('data: ') ? line.substring(6) : line;
     try {
-      final json = jsonDecode(data) as Map<String, dynamic>;
+      final Map<String, dynamic> json = jsonDecode(data) as Map<String, dynamic>;
       return extractContent(json);
     } catch (e) {
       throw Exception('Parse error: $e\nData: $data');
@@ -44,33 +44,33 @@ class ClaudeClient extends AiClient {
 
   @override
   Stream<String> generateStream(List<Map<String, dynamic>> messages) async* {
-    final dio = AiDio.instance.dio;
+    final Dio dio = AiDio.instance.dio;
 
     try {
-      final response = await dio.post(
+      final Response response = await dio.post(
         url,
         options: Options(
           headers: getHeaders(),
           responseType: ResponseType.stream,
-          validateStatus: (status) => true,
+          validateStatus: (int? status) => true,
         ),
-        data: {
+        data: <String, Object>{
           'model': model,
           'messages': messages,
           'stream': true,
         },
       );
 
-      final stream = response.data.stream as Stream<List<int>>;
-      await for (final chunk in stream) {
+      final Stream<List<int>> stream = response.data.stream as Stream<List<int>>;
+      await for (final List<int> chunk in stream) {
         if (response.statusCode != 200) {
           yield* Stream.error('Error: ${response.statusCode}');
           continue;
         }
 
-        final lines = utf8.decode(chunk).split('\n');
-        for (final line in lines) {
-          final content = await processLine(line);
+        final List<String> lines = utf8.decode(chunk).split('\n');
+        for (final String line in lines) {
+          final String? content = await processLine(line);
           if (content != null) {
             yield content;
           }

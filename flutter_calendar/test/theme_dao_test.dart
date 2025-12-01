@@ -24,14 +24,14 @@ void main() {
   group('ThemeDao', () {
     test('colorSchema generates ThemeData with seed color', () {
       // 设置测试颜色
-      final mockNotifier = MockThemeNotifier();
+      final MockThemeNotifier mockNotifier = MockThemeNotifier();
       mockNotifier.testColor = const Color(0xFFE91E63); // 粉色
 
       // 创建一个 Mock BuildContext
       final BuildContext mockContext = MockBuildContext();
 
       // 生成亮色主题
-      final lightTheme =
+      final ThemeData lightTheme =
           ThemeDao.colorSchema(mockNotifier, mockContext, Brightness.light);
 
       // 验证主题数据已生成
@@ -40,7 +40,7 @@ void main() {
       expect(lightTheme.brightness, equals(Brightness.light));
 
       // 生成暗色主题
-      final darkTheme =
+      final ThemeData darkTheme =
           ThemeDao.colorSchema(mockNotifier, mockContext, Brightness.dark);
 
       // 验证主题数据已生成

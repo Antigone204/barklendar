@@ -3,12 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_smart_calendar/providers/ai_config_provider.dart';
 import 'package:ai_smart_calendar/services/ai_client.dart';
-import 'package:ai_smart_calendar/services/ai_factory.dart';
-import 'package:ai_smart_calendar/services/ai_service_interface.dart';
 import 'package:ai_smart_calendar/services/ai_service.dart' as static_ai;
 import 'package:ai_smart_calendar/services/hive_service.dart';
 import 'package:ai_smart_calendar/enums/ai_prompts.dart';
-import 'package:ai_smart_calendar/utils/string_utils.dart';
 
 class AiServiceDetailPage extends ConsumerStatefulWidget {
   final Map<String, String>? config;
@@ -21,28 +18,28 @@ class AiServiceDetailPage extends ConsumerStatefulWidget {
 }
 
 class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // 预设数据
-  final Map<String, Map<String, String>> _presets = {
-    'openai': {
+  final Map<String, Map<String, String>> _presets = <String, Map<String, String>>{
+    'openai': <String, String>{
       'name': 'OpenAI',
       'url': 'https://api.openai.com/v1',
     },
-    'deepseek': {
+    'deepseek': <String, String>{
       'name': 'DeepSeek',
       'url': 'https://api.deepseek.com/v1',
     },
-    'qwen': {
+    'qwen': <String, String>{
       'name': '通义千问',
       'url':
           'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
     },
-    'lmstudio': {
+    'lmstudio': <String, String>{
       'name': 'LM Studio',
       'url': 'http://localhost:1234/v1',
     },
-    'custom': {
+    'custom': <String, String>{
       'name': '自定义',
       'url': '',
     },
@@ -50,10 +47,10 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
 
   // 表单控制器
   String _selectedPreset = 'openai';
-  final _nameController = TextEditingController();
-  final _apiKeyController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _urlController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _modelController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController();
 
   // 异步操作状态
   bool _isTestingConnection = false;
@@ -91,7 +88,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   }
 
   String _determinePresetFromUrl(String url) {
-    for (var entry in _presets.entries) {
+    for (MapEntry<String, Map<String, String>> entry in _presets.entries) {
       if (entry.key != 'custom' && url == entry.value['url']) {
         return entry.key;
       }
@@ -127,7 +124,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             // A. 配置表单部分
             _buildConfigForm(),
             const SizedBox(height: 24),
@@ -156,7 +153,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               const Text(
                 '服务配置',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -166,10 +163,10 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: "名称",
-                  hintText: "例如：OpenAI GPT-4",
+                  labelText: '名称',
+                  hintText: '例如：OpenAI GPT-4',
                 ),
-                validator: (value) {
+                validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return '请输入配置名称';
                   }
@@ -180,14 +177,14 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
 
               // 服务预设选择器
               DropdownButtonFormField<String>(
-                value: _selectedPreset,
-                items: _presets.entries.map((entry) {
+                initialValue: _selectedPreset,
+                items: _presets.entries.map((MapEntry<String, Map<String, String>> entry) {
                   return DropdownMenuItem(
                     value: entry.key,
                     child: Text(entry.value['name']!),
                   );
                 }).toList(),
-                onChanged: (value) {
+                onChanged: (String? value) {
                   if (value != null) {
                     setState(() {
                       _selectedPreset = value;
@@ -196,7 +193,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
                     });
                   }
                 },
-                decoration: const InputDecoration(labelText: "服务预设"),
+                decoration: const InputDecoration(labelText: '服务预设'),
               ),
               const SizedBox(height: 16),
 
@@ -204,10 +201,10 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               TextFormField(
                 controller: _urlController,
                 decoration: const InputDecoration(
-                  labelText: "API Base URL",
-                  hintText: "例如：https://api.example.com/v1",
+                  labelText: 'API Base URL',
+                  hintText: '例如：https://api.example.com/v1',
                 ),
-                validator: (value) {
+                validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return '请输入API Base URL';
                   }
@@ -222,8 +219,8 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               TextFormField(
                 controller: _apiKeyController,
                 decoration: InputDecoration(
-                  labelText: "API Key",
-                  hintText: "请输入您的API密钥",
+                  labelText: 'API Key',
+                  hintText: '请输入您的API密钥',
                   suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
@@ -236,7 +233,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
                   ),
                 ),
                 obscureText: _obscureApiKey,
-                validator: (value) {
+                validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return '请输入API密钥';
                   }
@@ -248,10 +245,10 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               TextFormField(
                 controller: _modelController,
                 decoration: const InputDecoration(
-                  labelText: "模型名称",
-                  hintText: "例如：gpt-3.5-turbo",
+                  labelText: '模型名称',
+                  hintText: '例如：gpt-3.5-turbo',
                 ),
-                validator: (value) {
+                validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return '请输入模型名称';
                   }
@@ -266,9 +263,9 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   }
 
   Widget _buildActionButtons() {
-    final aiConfigState = ref.watch(aiConfigProvider);
-    final isActive = aiConfigState.when(
-      data: (state) =>
+    final AsyncValue<AiConfigState> aiConfigState = ref.watch(aiConfigProvider);
+    final bool isActive = aiConfigState.when(
+      data: (AiConfigState state) =>
           widget.config != null && widget.config!['id'] == state.activeConfigId,
       loading: () => false,
       error: (_, __) => false,
@@ -279,7 +276,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             const Text(
               '操作',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -288,7 +285,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [
+              children: <Widget>[
                 // 连接测试按钮
                 ElevatedButton.icon(
                   onPressed: _isTestingConnection ? null : _testConnection,
@@ -355,36 +352,36 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   }
 
   Widget _buildPromptSettings() {
-    final prompts = [
-      {
-        "identifier": AiPrompts.test,
-        "title": "测试提示词",
-        "variables": ["language_locale"],
+    final List<Map<String, Object>> prompts = <Map<String, Object>>[
+      <String, Object>{
+        'identifier': AiPrompts.test,
+        'title': '测试提示词',
+        'variables': <String>['language_locale'],
       },
-      {
-        "identifier": AiPrompts.summarizeDay,
-        "title": "每日日程总结",
-        "variables": ["date", "tasks"],
+      <String, Object>{
+        'identifier': AiPrompts.summarizeDay,
+        'title': '每日日程总结',
+        'variables': <String>['date', 'tasks'],
       },
-      {
-        "identifier": AiPrompts.summarizeWeek,
-        "title": "每周日程总结",
-        "variables": ["start_date", "end_date", "tasks"],
+      <String, Object>{
+        'identifier': AiPrompts.summarizeWeek,
+        'title': '每周日程总结',
+        'variables': <String>['start_date', 'end_date', 'tasks'],
       },
-      {
-        "identifier": AiPrompts.createEvent,
-        "title": "创建日程事件",
-        "variables": ["title", "description", "date", "time"],
+      <String, Object>{
+        'identifier': AiPrompts.createEvent,
+        'title': '创建日程事件',
+        'variables': <String>['title', 'description', 'date', 'time'],
       },
-      {
-        "identifier": AiPrompts.suggestTime,
-        "title": "建议空闲时间",
-        "variables": ["busy_times", "duration"],
+      <String, Object>{
+        'identifier': AiPrompts.suggestTime,
+        'title': '建议空闲时间',
+        'variables': <String>['busy_times', 'duration'],
       },
-      {
-        "identifier": AiPrompts.analyzeProductivity,
-        "title": "分析工作效率",
-        "variables": ["completed_tasks", "pending_tasks"],
+      <String, Object>{
+        'identifier': AiPrompts.analyzeProductivity,
+        'title': '分析工作效率',
+        'variables': <String>['completed_tasks', 'pending_tasks'],
       }
     ];
 
@@ -393,7 +390,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             const Text(
               '提示词设置',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -403,9 +400,9 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: prompts.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (BuildContext context, int index) {
                 return ListTile(
-                  title: Text(prompts[index]["title"] as String),
+                  title: Text(prompts[index]['title'] as String),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     _editPrompt(prompts[index]);
@@ -425,43 +422,42 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             const Text(
               '缓存管理',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ListTile(
-              title: const Text("缓存大小"),
+              title: const Text('缓存大小'),
               subtitle: Slider(
                 value: HiveService.maxAiCacheCount.toDouble(),
-                min: 0,
                 max: 1000,
                 divisions: 100,
-                onChanged: (value) {
+                onChanged: (double value) {
                   HiveService.maxAiCacheCount = value.toInt();
                   setState(() {});
                 },
               ),
-              trailing: Text("${HiveService.maxAiCacheCount} 条"),
+              trailing: Text('${HiveService.maxAiCacheCount} 条'),
             ),
             ListTile(
-              title: const Text("清空缓存"),
+              title: const Text('清空缓存'),
               trailing: const Icon(Icons.delete),
               onTap: () {
                 showDialog(
                   context: context,
                   builder: (BuildContext dialogContext) => AlertDialog(
-                    title: const Text("确认清空"),
-                    content: const Text("确定要清空所有AI缓存吗？此操作不可撤销。"),
-                    actions: [
+                    title: const Text('确认清空'),
+                    content: const Text('确定要清空所有AI缓存吗？此操作不可撤销。'),
+                    actions: <Widget>[
                       TextButton(
                         onPressed: () {
                           if (dialogContext.canPop()) {
                             dialogContext.pop();
                           }
                         },
-                        child: const Text("取消"),
+                        child: const Text('取消'),
                       ),
                       TextButton(
                         onPressed: () {
@@ -471,7 +467,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
                           }
                           setState(() {});
                         },
-                        child: const Text("确认"),
+                        child: const Text('确认'),
                       ),
                     ],
                   ),
@@ -504,7 +500,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
 
     try {
       // 从表单获取当前值
-      final currentConfig = <String, String>{
+      final Map<String, String> currentConfig = <String, String>{
         'name': _nameController.text,
         AiConfigKeys.type: 'generic', // 所有服务都使用通用类型
         AiConfigKeys.apiKey: _apiKeyController.text,
@@ -513,7 +509,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
       };
 
       // 使用 AiService 测试连接
-      final result = await static_ai.AiService.testConnection(
+      final Map<String, dynamic> result = await static_ai.AiService.testConnection(
         identifier: 'generic', // 统一使用通用类型
         config: currentConfig,
       );
@@ -523,7 +519,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
         SnackBar(
           content: Text(result['success'] == true
               ? '连接测试成功！'
-              : '连接测试失败：${result['message']}'),
+              : '连接测试失败：${result['message']}',),
           backgroundColor:
               result['success'] == true ? Colors.green : Colors.red,
         ),
@@ -552,7 +548,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
     });
 
     try {
-      final config = <String, String>{
+      final Map<String, String> config = <String, String>{
         'name': _nameController.text,
         AiConfigKeys.type: 'generic', // 所有服务都使用通用类型
         AiConfigKeys.apiKey: _apiKeyController.text,
@@ -565,7 +561,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
         config['id'] = widget.config!['id']!;
       }
 
-      final notifier = ref.read(aiConfigProvider.notifier);
+      final AiConfigNotifier notifier = ref.read(aiConfigProvider.notifier);
 
       if (widget.config != null) {
         // 更新配置
@@ -641,14 +637,14 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
 
   void _showDeleteDialog() {
     // 保存页面的 context，以便在对话框关闭后使用
-    final pageContext = context;
+    final BuildContext pageContext = context;
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('删除配置'),
           content: Text('确定要删除 "${widget.config!['name']}" 配置吗？'),
-          actions: [
+          actions: <Widget>[
             TextButton(
               onPressed: () {
                 if (dialogContext.canPop()) {
@@ -710,19 +706,19 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   }
 
   void _editPrompt(Map<String, dynamic> prompt) {
-    final controller = TextEditingController(
-      text: HiveService.getAiPrompt(prompt["identifier"])?.toString() ??
-          "默认提示词内容",
+    final TextEditingController controller = TextEditingController(
+      text: HiveService.getAiPrompt(prompt['identifier']).toString() ??
+          '默认提示词内容',
     );
 
     showDialog(
         context: context,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
-            title: const Text("编辑提示词"),
+            title: const Text('编辑提示词'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 TextField(
                   maxLines: 10,
                   controller: controller,
@@ -731,11 +727,11 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
                   ),
                 ),
                 Wrap(
-                  children: [
-                    for (var variable in prompt["variables"] as List<String>)
+                  children: <Widget>[
+                    for (String variable in prompt['variables'] as List<String>)
                       TextButton(
                         onPressed: () {
-                          final selection = controller.selection;
+                          final TextSelection selection = controller.selection;
                           if (selection.start == -1 || selection.end == -1) {
                             return;
                           }
@@ -748,33 +744,33 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
                         child: Text('{{$variable}}'),
                       ),
                   ],
-                )
+                ),
               ],
             ),
-            actions: [
+            actions: <Widget>[
               TextButton(
                 onPressed: () {
-                  HiveService.deleteAiPrompt(prompt["identifier"]);
+                  HiveService.deleteAiPrompt(prompt['identifier']);
                   if (dialogContext.canPop()) {
                     dialogContext.pop();
                   }
                 },
-                child: const Text("重置"),
+                child: const Text('重置'),
               ),
               TextButton(
                 onPressed: () {
                   HiveService.saveAiPrompt(
-                    prompt["identifier"],
+                    prompt['identifier'],
                     controller.text,
                   );
                   if (dialogContext.canPop()) {
                     dialogContext.pop();
                   }
                 },
-                child: const Text("保存"),
+                child: const Text('保存'),
               ),
             ],
           );
-        });
+        },);
   }
 }

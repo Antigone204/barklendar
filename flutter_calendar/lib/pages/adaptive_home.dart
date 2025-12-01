@@ -27,30 +27,30 @@ class _AdaptiveHomeState extends ConsumerState<AdaptiveHome> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
-    final pages = [
+    final List<ConsumerStatefulWidget> pages = <ConsumerStatefulWidget>[
       const CalendarPage(key: ValueKey('calendar')),
       const TaskListPage(key: ValueKey('task_list')),
       const AIPage(key: ValueKey('ai')),
       const SettingsPage(key: ValueKey('settings')),
     ];
 
-    final destinations = [
+    final List<NavigationDestination> destinations = <NavigationDestination>[
       NavigationDestination(
-          icon: const Icon(Icons.calendar_today), label: l10n.calendar),
+          icon: const Icon(Icons.calendar_today), label: l10n.calendar,),
       NavigationDestination(icon: const Icon(Icons.list), label: l10n.tasks),
       NavigationDestination(
-          icon: const Icon(Icons.auto_awesome), label: l10n.ai),
+          icon: const Icon(Icons.auto_awesome), label: l10n.ai,),
       NavigationDestination(
-          icon: const Icon(Icons.settings), label: l10n.settings),
+          icon: const Icon(Icons.settings), label: l10n.settings,),
     ];
 
     return Scaffold(
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () async {
-                final result = await context.toTaskDetail();
+                final Object? result = await context.toTaskDetail();
                 if (result is TaskModel && mounted) {
                   ref.read(tasksProvider.notifier).addTask(result);
                 }
@@ -63,7 +63,7 @@ class _AdaptiveHomeState extends ConsumerState<AdaptiveHome> {
 
         // 底部导航：小屏显示
         bottomNavigation: SlotLayout(
-          config: {
+          config: <Breakpoint, SlotLayoutConfig?>{
             Breakpoints.small: SlotLayout.from(
               key: const Key('bottom'),
               builder: (_) => BottomNavigationBar(
@@ -71,8 +71,8 @@ class _AdaptiveHomeState extends ConsumerState<AdaptiveHome> {
                 onTap: _onDestinationSelected,
                 type: BottomNavigationBarType.fixed,
                 items: destinations
-                    .map((d) =>
-                        BottomNavigationBarItem(icon: d.icon, label: d.label))
+                    .map((NavigationDestination d) =>
+                        BottomNavigationBarItem(icon: d.icon, label: d.label),)
                     .toList(),
               ),
             ),
@@ -81,7 +81,7 @@ class _AdaptiveHomeState extends ConsumerState<AdaptiveHome> {
 
         // 侧边导航：中大屏显示
         primaryNavigation: SlotLayout(
-          config: {
+          config: <Breakpoint, SlotLayoutConfig?>{
             Breakpoints.mediumAndUp: SlotLayout.from(
               key: const Key('rail'),
               // 【关键修复】：在这里用 SizedBox 限制宽度
@@ -104,7 +104,7 @@ class _AdaptiveHomeState extends ConsumerState<AdaptiveHome> {
 
         // 核心内容区域
         body: SlotLayout(
-          config: {
+          config: <Breakpoint, SlotLayoutConfig?>{
             Breakpoints.standard: SlotLayout.from(
               key: const Key('body'),
               builder: (_) => IndexedStack(

@@ -9,7 +9,7 @@ class FunctionCall {
 
   factory FunctionCall.fromJson(Map<String, dynamic> json) {
     final dynamic rawArguments = json['arguments'];
-    Map<String, dynamic> arguments = {}; // 默认为空Map
+    Map<String, dynamic> arguments = <String, dynamic>{}; // 默认为空Map
 
     if (rawArguments is Map) {
       // 关键：使用 Map.from 来安全地转换类型，而不是强制转换
@@ -23,7 +23,7 @@ class FunctionCall {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'name': name,
       'arguments': arguments,
     };
@@ -51,12 +51,11 @@ class AIResponse {
   factory AIResponse.directAnswer(String content) {
     return AIResponse(
       content: content,
-      isDirectAnswer: true,
     );
   }
 
   factory AIResponse.withFunctionCall(FunctionCall functionCall,
-      {String content = ''}) {
+      {String content = '',}) {
     return AIResponse(
       content: content,
       isDirectAnswer: false,

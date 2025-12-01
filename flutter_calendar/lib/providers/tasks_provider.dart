@@ -87,7 +87,7 @@ final AutoDisposeProviderFamily<AsyncValue<List<TaskModel>>, TaskFilter>
     filteredTasksProvider = Provider.autoDispose
         .family<AsyncValue<List<TaskModel>>, TaskFilter>(
             (AutoDisposeProviderRef<AsyncValue<List<TaskModel>>> ref,
-                TaskFilter filter) {
+                TaskFilter filter,) {
   // 监听（watch）主任务列表的变化
   final AsyncValue<List<TaskModel>> tasksAsync = ref.watch(tasksProvider);
 
@@ -224,8 +224,8 @@ final AutoDisposeProvider<AsyncValue<TaskListState>> taskListStateProvider =
     // 两个都成功时，组合数据
     return AsyncValue.data(
       TaskListState(
-        pending: pending.value ?? [],
-        completed: completed.value ?? [],
+        pending: pending.value ?? <TaskModel>[],
+        completed: completed.value ?? <TaskModel>[],
       ),
     );
   },

@@ -9,9 +9,9 @@ import 'package:ai_smart_calendar/services/notification_service.dart';
 import 'package:ai_smart_calendar/utils/task_notification_scheduler.dart';
 
 // Provider 保持不变
-final startupServiceProvider = StateProvider<bool>((ref) => false);
-final lifecycleManagerProvider = Provider<AppLifecycleManager>((ref) {
-  final manager = AppLifecycleManager(ref);
+final StateProvider<bool> startupServiceProvider = StateProvider<bool>((StateProviderRef<bool> ref) => false);
+final Provider<AppLifecycleManager> lifecycleManagerProvider = Provider<AppLifecycleManager>((ProviderRef<AppLifecycleManager> ref) {
+  final AppLifecycleManager manager = AppLifecycleManager(ref);
   ref.onDispose(() => manager.dispose());
   return manager;
 });
@@ -35,14 +35,14 @@ class AppLifecycleManager with WidgetsBindingObserver {
     final bool permissionsGranted =
         await NotificationService.requestNotificationPermission();
     debugPrint(
-        'LifecycleManager: Notification permissions granted: $permissionsGranted');
+        'LifecycleManager: Notification permissions granted: $permissionsGranted',);
 
     // 2. 如果获得了权限，或者在不需要权限的平台上，再执行后续任务
     if (permissionsGranted) {
       await processTaskNotificationsOnStartup();
     } else {
       debugPrint(
-          'LifecycleManager: Skipping task processing due to denied permissions.');
+          'LifecycleManager: Skipping task processing due to denied permissions.',);
       // 标记为已处理，防止应用恢复时再次尝试（除非用户去系统设置里开启）
       _ref.read(startupServiceProvider.notifier).state = true;
     }
@@ -57,12 +57,12 @@ class AppLifecycleManager with WidgetsBindingObserver {
     // 使用 Provider 作为锁，确保只执行一次
     if (_ref.read(startupServiceProvider)) {
       debugPrint(
-          'LifecycleManager: Startup processing has already run, skipping.');
+          'LifecycleManager: Startup processing has already run, skipping.',);
       return;
     }
     _ref.read(startupServiceProvider.notifier).state = true;
     debugPrint(
-        'LifecycleManager: Starting initial task notification processing...');
+        'LifecycleManager: Starting initial task notification processing...',);
 
     try {
       // 这里的逻辑保持不变

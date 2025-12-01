@@ -30,11 +30,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       name: 'add_task',
       path: '/add-task',
-      builder: (context, state) {
+      builder: (BuildContext context, GoRouterState state) {
         // 新增时根本不会传 extra，直接写 null 最清晰
-        return TodoDetailPage(
-          taskId: null,
-          initialTask: null, // 明确是新增
+        return const TodoDetailPage(
+          
         );
       },
     ),
@@ -43,8 +42,8 @@ final GoRouter router = GoRouter(
       name: 'task_detail',
       path: '/task/:taskId',
       builder: (BuildContext context, GoRouterState state) {
-        final taskId = state.pathParameters['taskId'];
-        final task = state.extra as TaskModel?; // 直接传整个对象！
+        final String? taskId = state.pathParameters['taskId'];
+        final TaskModel? task = state.extra as TaskModel?; // 直接传整个对象！
         return TodoDetailPage(
           taskId: taskId,
           initialTask: task, // 不为 null = 编辑
@@ -93,7 +92,7 @@ final GoRouter router = GoRouter(
       name: 'ai_config_form',
       path: '/ai-config-form',
       builder: (BuildContext context, GoRouterState state) {
-        final config = state.extra as Map<String, String>?; // 直接传整个对象！
+        final Map<String, String>? config = state.extra as Map<String, String>?; // 直接传整个对象！
         return AiConfigFormPage(config: config);
       },
     ),
@@ -103,7 +102,7 @@ final GoRouter router = GoRouter(
       name: 'ai_service_detail',
       path: '/ai-service-detail',
       builder: (BuildContext context, GoRouterState state) {
-        final config = state.extra as Map<String, String>?; // 直接传整个对象！
+        final Map<String, String>? config = state.extra as Map<String, String>?; // 直接传整个对象！
         return AiServiceDetailPage(config: config);
       },
     ),

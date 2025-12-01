@@ -109,7 +109,7 @@ class CalendarToolService {
       return ToolCallResponse.success(
         toolName: request.toolName,
         functionName: request.functionName,
-        result: {
+        result: <String, Object>{
           'message': '事件创建成功',
           'event': createdTask.toJson(),
         },
@@ -151,9 +151,9 @@ class CalendarToolService {
       return ToolCallResponse.success(
         toolName: request.toolName,
         functionName: request.functionName,
-        result: {
+        result: <String, Object>{
           'count': events.length,
-          'events': events.map((e) => e.toJson()).toList(),
+          'events': events.map((TaskModel e) => e.toJson()).toList(),
         },
       );
     } catch (e) {
@@ -225,7 +225,7 @@ class CalendarToolService {
       return ToolCallResponse.success(
         toolName: request.toolName,
         functionName: request.functionName,
-        result: {
+        result: <String, Object>{
           'message': '事件更新成功',
           'event': result.toJson(),
         },
@@ -261,7 +261,7 @@ class CalendarToolService {
       return ToolCallResponse.success(
         toolName: request.toolName,
         functionName: request.functionName,
-        result: {
+        result: <String, dynamic>{
           'message': '事件删除成功',
           'id': params['id'],
         },
@@ -302,7 +302,7 @@ class CalendarToolService {
       return ToolCallResponse.success(
         toolName: request.toolName,
         functionName: request.functionName,
-        result: {
+        result: <String, Map<String, dynamic>>{
           'event': task.toJson(),
         },
       );
@@ -322,9 +322,9 @@ class CalendarToolService {
       return ToolCallResponse.success(
         toolName: request.toolName,
         functionName: request.functionName,
-        result: {
+        result: <String, Object>{
           'count': events.length,
-          'events': events.map((e) => e.toJson()).toList(),
+          'events': events.map((TaskModel e) => e.toJson()).toList(),
         },
       );
     } catch (e) {

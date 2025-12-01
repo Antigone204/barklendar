@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/src/gestures/events.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -24,25 +25,25 @@ class CalendarWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tasksAsyncValue = ref.watch(tasksProvider);
+    final AsyncValue<List<TaskModel>> tasksAsyncValue = ref.watch(tasksProvider);
 
     return Scaffold(
       body: Column(
-        children: [
+        children: <Widget>[
           // --- 1. 日历部分 ---
           Expanded(
             flex: 3,
             child: tasksAsyncValue.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('加载任务失败: $err')),
-              data: (tasks) => _CalendarView(tasks: tasks),
+              error: (Object err, StackTrace stack) => Center(child: Text('加载任务失败: $err')),
+              data: (List<TaskModel> tasks) => _CalendarView(tasks: tasks),
             ),
           ),
           const Divider(height: 1, thickness: 1),
           // --- 2. 任务列表部分 ---
-          Expanded(
+          const Expanded(
             flex: 2,
-            child: const _SelectedTasksList(),
+            child: _SelectedTasksList(),
           ),
         ],
       ),
@@ -91,7 +92,7 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedDate = ref.watch(selectedDateProvider);
+    final DateTime selectedDate = ref.watch(selectedDateProvider);
 
     return RawKeyboardListener(
       focusNode: _focusNode,
@@ -110,7 +111,7 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
       child: MouseRegion(
         onEnter: (_) => _focusNode.requestFocus(),
         child: Listener(
-          onPointerSignal: (pointerSignal) {
+          onPointerSignal: (PointerSignalEvent pointerSignal) {
             try {
               final dynamic signal = pointerSignal;
               final dynamic scrollDelta = signal.scrollDelta?.dy;
@@ -132,7 +133,7 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
             view: CalendarView.month,
             headerStyle: const CalendarHeaderStyle(textAlign: TextAlign.center),
             dataSource: _getCalendarDataSource(widget.tasks),
-            onTap: (details) {
+            onTap: (CalendarTapDetails details) {
               if (details.targetElement == CalendarElement.calendarCell &&
                   details.date != null) {
                 if (!_isSameDay(details.date, selectedDate)) {
@@ -140,14 +141,9 @@ class _CalendarViewState extends ConsumerState<_CalendarView> {
                 }
               }
             },
-            monthViewSettings: const MonthViewSettings(
-              showAgenda: false,
-              appointmentDisplayMode: MonthAppointmentDisplayMode.indicator,
-            ),
             selectionDecoration: BoxDecoration(
               color: Colors.transparent,
               border: Border.all(color: AppTheme.primaryColor, width: 2),
-              shape: BoxShape.rectangle,
               borderRadius: BorderRadius.circular(8),
             ),
             todayHighlightColor: AppTheme.primaryColor,
@@ -165,23 +161,23 @@ class _SelectedTasksList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedDate = ref.watch(selectedDateProvider);
-    final tasksAsyncValue = ref.watch(tasksProvider);
+    final DateTime selectedDate = ref.watch(selectedDateProvider);
+    final AsyncValue<List<TaskModel>> tasksAsyncValue = ref.watch(tasksProvider);
 
-    final dayOfWeek = DateFormat('E', 'zh_CN').format(selectedDate);
-    final dayOfMonth = selectedDate.day;
+    final String dayOfWeek = DateFormat('E', 'zh_CN').format(selectedDate);
+    final int dayOfMonth = selectedDate.day;
 
     return tasksAsyncValue.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('加载任务失败: $err')),
-      data: (tasks) {
-        final selectedTasks = tasks
-            .where((task) => _isSameDay(task.dueDate, selectedDate))
+      error: (Object err, StackTrace stack) => Center(child: Text('加载任务失败: $err')),
+      data: (List<TaskModel> tasks) {
+        final List<TaskModel> selectedTasks = tasks
+            .where((TaskModel task) => _isSameDay(task.dueDate, selectedDate))
             .toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             // [修复]: 进一步减小 Padding (8 -> 4) 并添加 FittedBox
             Container(
               height: 40, // 强制给一个较小的高度约束
@@ -210,10 +206,10 @@ class _SelectedTasksList extends ConsumerWidget {
             else
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.only(top: 0), // 移除列表顶部的额外间距
+                  padding: const EdgeInsets.only(), // 移除列表顶部的额外间距
                   itemCount: selectedTasks.length,
-                  itemBuilder: (context, index) {
-                    final task = selectedTasks[index];
+                  itemBuilder: (BuildContext context, int index) {
+                    final TaskModel task = selectedTasks[index];
                     return _TaskCard(task: task);
                   },
                 ),
@@ -240,7 +236,7 @@ class _TaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _getTaskColor(task),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 5,
@@ -250,12 +246,12 @@ class _TaskCard extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+        children: <Widget>[
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Text(
                   task.title,
                   style: const TextStyle(
@@ -289,7 +285,6 @@ class _TaskCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: Colors.white.withOpacity(0.5),
-                width: 1,
               ),
             ),
             child: Text(

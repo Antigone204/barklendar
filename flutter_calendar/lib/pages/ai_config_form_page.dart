@@ -14,16 +14,16 @@ class AiConfigFormPage extends ConsumerStatefulWidget {
 }
 
 class _AiConfigFormPageState extends ConsumerState<AiConfigFormPage> {
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // 使用 'generic', 'openai', 'deepseek' 等作为下拉选项的值
   String _selectedType = 'openai';
 
   // 控制器用于获取输入
-  final _nameController = TextEditingController();
-  final _apiKeyController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _urlController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _modelController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController();
 
   @override
   void initState() {
@@ -77,14 +77,14 @@ class _AiConfigFormPageState extends ConsumerState<AiConfigFormPage> {
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16.0),
-          children: [
+          children: <Widget>[
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: "名称",
-                hintText: "例如：OpenAI GPT-4",
+                labelText: '名称',
+                hintText: '例如：OpenAI GPT-4',
               ),
-              validator: (value) {
+              validator: (String? value) {
                 if (value == null || value.isEmpty) {
                   return '请输入配置名称';
                 }
@@ -95,35 +95,35 @@ class _AiConfigFormPageState extends ConsumerState<AiConfigFormPage> {
 
             // 类型选择器
             DropdownButtonFormField<String>(
-              value: _selectedType,
-              items: const [
-                DropdownMenuItem(value: 'openai', child: Text("OpenAI")),
-                DropdownMenuItem(value: 'deepseek', child: Text("DeepSeek")),
+              initialValue: _selectedType,
+              items: const <DropdownMenuItem<String>>[
+                DropdownMenuItem(value: 'openai', child: Text('OpenAI')),
+                DropdownMenuItem(value: 'deepseek', child: Text('DeepSeek')),
                 DropdownMenuItem(
-                    value: 'generic', child: Text("通用 (OpenAI 兼容)")),
+                    value: 'generic', child: Text('通用 (OpenAI 兼容)'),),
               ],
-              onChanged: (value) {
+              onChanged: (String? value) {
                 if (value != null) {
                   setState(() {
                     _selectedType = value;
                   });
                 }
               },
-              decoration: const InputDecoration(labelText: "服务类型"),
+              decoration: const InputDecoration(labelText: '服务类型'),
             ),
             const SizedBox(height: 16),
 
             // **核心逻辑：根据类型条件性地显示URL输入框**
             if (_selectedType == 'generic')
               Column(
-                children: [
+                children: <Widget>[
                   TextFormField(
                     controller: _urlController,
                     decoration: const InputDecoration(
-                      labelText: "API Base URL",
-                      hintText: "例如：https://api.example.com/v1",
+                      labelText: 'API Base URL',
+                      hintText: '例如：https://api.example.com/v1',
                     ),
-                    validator: (value) {
+                    validator: (String? value) {
                       if (_selectedType == 'generic' &&
                           (value == null || value.isEmpty)) {
                         return '通用类型必须提供URL';
@@ -143,11 +143,11 @@ class _AiConfigFormPageState extends ConsumerState<AiConfigFormPage> {
             TextFormField(
               controller: _apiKeyController,
               decoration: const InputDecoration(
-                labelText: "API Key",
-                hintText: "请输入您的API密钥",
+                labelText: 'API Key',
+                hintText: '请输入您的API密钥',
               ),
               obscureText: true,
-              validator: (value) {
+              validator: (String? value) {
                 if (value == null || value.isEmpty) {
                   return '请输入API密钥';
                 }
@@ -159,10 +159,10 @@ class _AiConfigFormPageState extends ConsumerState<AiConfigFormPage> {
             TextFormField(
               controller: _modelController,
               decoration: const InputDecoration(
-                labelText: "模型名称",
-                hintText: "例如：gpt-3.5-turbo",
+                labelText: '模型名称',
+                hintText: '例如：gpt-3.5-turbo',
               ),
-              validator: (value) {
+              validator: (String? value) {
                 if (value == null || value.isEmpty) {
                   return '请输入模型名称';
                 }
@@ -197,7 +197,7 @@ class _AiConfigFormPageState extends ConsumerState<AiConfigFormPage> {
 
   void _saveConfig() {
     if (_formKey.currentState!.validate()) {
-      final config = <String, String>{
+      final Map<String, String> config = <String, String>{
         'name': _nameController.text,
         AiConfigKeys.type: _selectedType,
         AiConfigKeys.apiKey: _apiKeyController.text,
@@ -224,7 +224,7 @@ class _AiConfigFormPageState extends ConsumerState<AiConfigFormPage> {
         config['id'] = widget.config!['id']!;
       }
 
-      final notifier = ref.read(aiConfigProvider.notifier);
+      final AiConfigNotifier notifier = ref.read(aiConfigProvider.notifier);
 
       if (widget.config != null) {
         // 更新配置

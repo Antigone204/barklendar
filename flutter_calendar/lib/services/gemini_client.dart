@@ -9,7 +9,7 @@ class GeminiClient extends AiClient {
 
   @override
   Map<String, String> getHeaders() {
-    return {
+    return <String, String>{
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $apiKey',
     };
@@ -23,24 +23,24 @@ class GeminiClient extends AiClient {
 
   @override
   Stream<String> generateStream(List<Map<String, dynamic>> messages) async* {
-    final dio = AiDio.instance.dio;
+    final Dio dio = AiDio.instance.dio;
 
     try {
-      final response = await dio.post(
+      final Response response = await dio.post(
         url,
         options: Options(
           headers: getHeaders(),
           responseType: ResponseType.stream,
-          validateStatus: (status) => true,
+          validateStatus: (int? status) => true,
         ),
         data: generateRequestBody(messages),
       );
 
-      final stream = response.data.stream as Stream<List<int>>;
-      List<int> buffer = [];
+      final Stream<List<int>> stream = response.data.stream as Stream<List<int>>;
+      final List<int> buffer = <int>[];
       String remainingData = '';
 
-      await for (final chunk in stream) {
+      await for (final List<int> chunk in stream) {
         if (response.statusCode != 200) {
           yield* Stream.error('Error: ${response.statusCode}');
           continue;
@@ -51,11 +51,11 @@ class GeminiClient extends AiClient {
           final String decodedData = utf8.decode(buffer);
           buffer.clear();
           final String processData = remainingData + decodedData;
-          final lines = processData.split('\n');
+          final List<String> lines = processData.split('\n');
           remainingData = '';
 
           for (int i = 0; i < lines.length; i++) {
-            final line = lines[i];
+            final String line = lines[i];
             if (line.trim().isEmpty) continue;
 
             if (i == lines.length - 1 && !line.endsWith(']')) {
@@ -64,12 +64,12 @@ class GeminiClient extends AiClient {
             }
 
             if (line.startsWith('data: ')) {
-              final data = line.substring(6);
+              final String data = line.substring(6);
               if (isDone(data)) break;
 
               try {
-                final json = jsonDecode(data) as Map<String, dynamic>;
-                final content = extractContent(json);
+                final Map<String, dynamic> json = jsonDecode(data) as Map<String, dynamic>;
+                final String? content = extractContent(json);
                 if (content != null) {
                   yield content;
                 }

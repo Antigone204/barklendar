@@ -3,7 +3,6 @@ import 'dart:developer' as developer;
 import 'package:ai_smart_calendar/models/function_call.dart';
 import 'package:ai_smart_calendar/services/ai_service_interface.dart';
 import 'package:ai_smart_calendar/services/ai_service.dart' as static_ai;
-import 'package:ai_smart_calendar/services/hive_service.dart';
 import 'package:ai_smart_calendar/services/ai_dio.dart';
 import 'package:dio/dio.dart';
 
@@ -20,20 +19,21 @@ class AIServiceInstance implements AIService {
   String get instanceId => _instanceId;
 
   /// 生成响应（支持工具调用）
+  @override
   Future<AIResponse> generateResponseWithTools({
     required List<Map<String, dynamic>> messages,
     required List<Map<String, dynamic>> tools,
   }) async {
     try {
-      final dio = AiDio.instance.dio;
+      final Dio dio = AiDio.instance.dio;
 
       // 处理URL路径，确保使用正确的API端点
-      final apiUrl = config['url']?.endsWith('/chat/completions') == true
+      final String apiUrl = config['url']?.endsWith('/chat/completions') == true
           ? config['url']!
           : '${config['url']}/chat/completions';
 
       // 构建请求体，包含工具定义
-      final requestBody = {
+      final Map<String, Object> requestBody = <String, Object>{
         'model': config['model'] ?? 'gpt-3.5-turbo',
         'messages': messages,
         'tools': tools,
@@ -52,14 +52,14 @@ class AIServiceInstance implements AIService {
       // =======================================================================
 
       // 发送请求
-      final response = await dio.post(
+      final Response response = await dio.post(
         apiUrl,
         options: Options(
-          headers: {
+          headers: <String, dynamic>{
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ${config['api_key']}',
           },
-          validateStatus: (status) => true,
+          validateStatus: (int? status) => true,
         ),
         data: requestBody,
       );
@@ -111,7 +111,7 @@ class AIServiceInstance implements AIService {
         // ===========================================================================
 
         final functionData = toolCalls[0]['function'];
-        final functionName = functionData['name'] as String; // 确保是字符串类型
+        final String functionName = functionData['name'] as String; // 确保是字符串类型
         final dynamic rawArguments =
             functionData['arguments']; // 1. 用 dynamic 接收，因为它可能是任何类型
 
@@ -126,7 +126,7 @@ class AIServiceInstance implements AIService {
         );
         // =================================================================================
 
-        Map<String, dynamic> arguments = {}; // 2. 准备一个干净的、空的Map作为默认值
+        Map<String, dynamic> arguments = <String, dynamic>{}; // 2. 准备一个干净的、空的Map作为默认值
 
         // 3. 关键的健壮性检查和转换！
         if (rawArguments is Map) {
@@ -150,7 +150,7 @@ class AIServiceInstance implements AIService {
         }
 
         // 4. 无论外部API给我们的是什么，我们传递给内部系统的，永远是一个干净的 Map<String, dynamic>
-        final functionCall =
+        final FunctionCall functionCall =
             FunctionCall(name: functionName, arguments: arguments);
 
         return AIResponse.withFunctionCall(
@@ -170,23 +170,24 @@ class AIServiceInstance implements AIService {
       // =======================================================================
 
       // 如果工具调用失败，回退到普通响应
-      final fallbackResponse = await generateResponse(messages: messages);
+      final String fallbackResponse = await generateResponse(messages: messages);
       return AIResponse.directAnswer(fallbackResponse);
     }
   }
 
   /// 生成普通响应（不支持工具调用）
+  @override
   Future<String> generateResponse({
     required List<Map<String, dynamic>> messages,
   }) async {
     try {
-      final buffer = StringBuffer();
-      final stream = static_ai.AiService.generateResponseWithTools(
+      final StringBuffer buffer = StringBuffer();
+      final Stream<String> stream = static_ai.AiService.generateResponseWithTools(
         messages,
         config: config,
       );
 
-      await for (final chunk in stream) {
+      await for (final String chunk in stream) {
         buffer.write(chunk);
       }
 
@@ -197,13 +198,14 @@ class AIServiceInstance implements AIService {
   }
 
   /// 测试连接
+  @override
   Future<Map<String, dynamic>> testConnection() async {
     try {
       return await static_ai.AiService.testConnection(
         config: config,
       );
     } catch (e) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': '连接测试失败',
         'error': e.toString(),

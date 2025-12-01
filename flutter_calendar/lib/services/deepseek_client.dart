@@ -9,7 +9,7 @@ class DeepSeekClient extends AiClient {
 
   @override
   Map<String, String> getHeaders() {
-    return {
+    return <String, String>{
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $apiKey',
     };
@@ -24,33 +24,33 @@ class DeepSeekClient extends AiClient {
 
   @override
   Stream<String> generateStream(List<Map<String, dynamic>> messages) async* {
-    final dio = AiDio.instance.dio;
+    final Dio dio = AiDio.instance.dio;
 
     try {
       // DeepSeek使用与OpenAI兼容的API格式，需要完整的URL路径
-      final apiUrl =
+      final String apiUrl =
           url.endsWith('/chat/completions') ? url : '$url/chat/completions';
 
-      final response = await dio.post(
+      final Response response = await dio.post(
         apiUrl,
         options: Options(
           headers: getHeaders(),
           responseType: ResponseType.stream,
-          validateStatus: (status) => true,
+          validateStatus: (int? status) => true,
         ),
         data: generateRequestBody(messages),
       );
 
-      final stream = response.data.stream as Stream<List<int>>;
-      await for (final chunk in stream) {
+      final Stream<List<int>> stream = response.data.stream as Stream<List<int>>;
+      await for (final List<int> chunk in stream) {
         if (response.statusCode != 200) {
           yield* Stream.error('Error: ${response.statusCode}');
           continue;
         }
 
-        final lines = utf8.decode(chunk).split('\n');
-        for (final line in lines) {
-          final content = await processLine(line);
+        final List<String> lines = utf8.decode(chunk).split('\n');
+        for (final String line in lines) {
+          final String? content = await processLine(line);
           if (content != null) {
             yield content;
           }

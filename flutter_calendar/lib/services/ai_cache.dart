@@ -17,31 +17,31 @@ class AiCache {
   }
 
   static Future<Map<String, dynamic>> readCache() async {
-    final cacheDir = await getCacheDir();
-    final file = File('${cacheDir.path}/$cacheFileName');
+    final Directory cacheDir = await getCacheDir();
+    final File file = File('${cacheDir.path}/$cacheFileName');
 
     if (await file.exists()) {
       try {
-        final content = await file.readAsString();
+        final String content = await file.readAsString();
         return json.decode(content) as Map<String, dynamic>;
       } catch (e) {
         await file.delete();
-        return {};
+        return <String, dynamic>{};
       }
     }
-    return {};
+    return <String, dynamic>{};
   }
 
   static Future<void> setAiCache(
-      int hash, String data, String identifier) async {
-    final cacheDir = await getCacheDir();
-    final file = File('${cacheDir.path}/$cacheFileName');
-    final cache = await readCache();
+      int hash, String data, String identifier,) async {
+    final Directory cacheDir = await getCacheDir();
+    final File file = File('${cacheDir.path}/$cacheFileName');
+    final Map<String, dynamic> cache = await readCache();
 
-    cache[hash.toString()] = {
+    cache[hash.toString()] = <String, Object>{
       'data': data,
       'identifier': identifier,
-      'timestamp': DateTime.now().millisecondsSinceEpoch
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
 
     await file.writeAsString(json.encode(cache));
@@ -49,40 +49,40 @@ class AiCache {
   }
 
   static Future<String?> getAiCache(int hash) async {
-    final cache = await readCache();
+    final Map<String, dynamic> cache = await readCache();
     final entry = cache[hash.toString()];
     if (entry != null) {
-      String data = entry['data'] as String;
-      String identifier = entry['identifier'] as String;
+      final String data = entry['data'] as String;
+      final String identifier = entry['identifier'] as String;
       return '$data\n\n> 由 $identifier 缓存';
     }
     return null;
   }
 
   static Future<void> cleanCache() async {
-    final maxCount = HiveService.maxAiCacheCount;
-    var cache = await readCache();
+    final int maxCount = HiveService.maxAiCacheCount;
+    final Map<String, dynamic> cache = await readCache();
     if (cache.length > maxCount) {
-      final keys = cache.keys.toList();
-      keys.sort((a, b) =>
-          (cache[a]!['timestamp'] as int) - (cache[b]!['timestamp'] as int));
-      final keysToRemove = keys.sublist(0, cache.length - maxCount);
-      cache.removeWhere((key, _) => keysToRemove.contains(key));
+      final List<String> keys = cache.keys.toList();
+      keys.sort((String a, String b) =>
+          (cache[a]!['timestamp'] as int) - (cache[b]!['timestamp'] as int),);
+      final List<String> keysToRemove = keys.sublist(0, cache.length - maxCount);
+      cache.removeWhere((String key, _) => keysToRemove.contains(key));
 
-      final cacheDir = await getCacheDir();
-      final file = File('${cacheDir.path}/$cacheFileName');
+      final Directory cacheDir = await getCacheDir();
+      final File file = File('${cacheDir.path}/$cacheFileName');
       await file.writeAsString(json.encode(cache));
     }
   }
 
   static Future<int> get cacheCount async {
-    final cache = await readCache();
+    final Map<String, dynamic> cache = await readCache();
     return cache.length;
   }
 
   static Future<void> clearCache() async {
-    final cacheDir = await getCacheDir();
-    final file = File('${cacheDir.path}/$cacheFileName');
+    final Directory cacheDir = await getCacheDir();
+    final File file = File('${cacheDir.path}/$cacheFileName');
     if (await file.exists()) {
       await file.delete();
     }

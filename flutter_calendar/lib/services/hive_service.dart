@@ -217,7 +217,7 @@ class HiveService {
   }
 
   static Future<void> importData(
-      Map<String, dynamic> data, WidgetRef ref) async {
+      Map<String, dynamic> data, WidgetRef ref,) async {
     await clearAllData(ref);
 
     final Box<TaskModel> tasksBox = Hive.box<TaskModel>(_tasksBoxName);
@@ -251,25 +251,25 @@ class HiveService {
 
   static Future<void> clearAllData(WidgetRef ref) async {
     developer.log('[DataClear] Starting data clearance...',
-        name: 'dataclear.debug');
+        name: 'dataclear.debug',);
 
     final Box<TaskModel> tasksBox = Hive.box<TaskModel>(_tasksBoxName);
     await tasksBox.clear();
     developer.log('[DataClear] Tasks box cleared. Size: ${tasksBox.length}',
-        name: 'dataclear.debug');
+        name: 'dataclear.debug',);
 
     final Box<CategoryModel> categoriesBox =
         Hive.box<CategoryModel>(_categoriesBoxName);
     await categoriesBox.clear();
     developer.log(
         '[DataClear] Categories box cleared. Size: ${categoriesBox.length}',
-        name: 'dataclear.debug');
+        name: 'dataclear.debug',);
 
     final Box settingsBox = Hive.box<dynamic>(_settingsBoxName);
     await settingsBox.clear();
     developer.log(
         '[DataClear] Settings box cleared. Size: ${settingsBox.length}',
-        name: 'dataclear.debug');
+        name: 'dataclear.debug',);
 
     // 关键修复：清除AI配置数据
     await clearAIData(ref);
@@ -278,7 +278,7 @@ class HiveService {
     await _initializeDefaultCategories();
     developer.log(
         '[DataClear] Data clearance finished. Now invalidating providers...',
-        name: 'dataclear.debug');
+        name: 'dataclear.debug',);
 
     // 关键一步：全局状态重置！
     ref.invalidate(tasksProvider);
@@ -287,21 +287,21 @@ class HiveService {
     // 注意：themeNotifierProvider 不需要失效，因为它不依赖Hive数据
 
     developer.log('[DataClear] Providers invalidated.',
-        name: 'dataclear.debug');
+        name: 'dataclear.debug',);
   }
 
   /// 清除AI相关数据（配置、提示词、缓存）
   static Future<void> clearAIData(WidgetRef ref) async {
     final Box settingsBox = Hive.box<dynamic>(_settingsBoxName);
-    final allKeys = settingsBox.keys.toList();
+    final List allKeys = settingsBox.keys.toList();
 
     // **优化点**：使用一个Set明确定义所有与新AI配置相关的键
-    const aiConfigKeysToDelete = {
+    const Set<String> aiConfigKeysToDelete = <String>{
       'ai_configs', // 新的配置列表键
-      'active_ai_config_id' // 新的激活ID键
+      'active_ai_config_id', // 新的激活ID键
     };
 
-    final keysToDelete = <String>[];
+    final List<String> keysToDelete = <String>[];
     for (final key in allKeys) {
       if (key is String) {
         // 删除所有旧的、分散的配置和提示词键
@@ -318,7 +318,7 @@ class HiveService {
     if (keysToDelete.isNotEmpty) {
       await settingsBox.deleteAll(keysToDelete);
       debugPrint(
-          'Successfully deleted the following AI keys: $keysToDelete'); // 增加日志
+          'Successfully deleted the following AI keys: $keysToDelete',); // 增加日志
     }
 
     // 清除AI缓存
@@ -340,10 +340,10 @@ class HiveService {
         Hive.box<CategoryModel>(_categoriesBoxName);
 
     // 只删除用户自定义的分类，保留默认分类
-    final userCategories =
-        categoriesBox.values.where((category) => !category.isDefault).toList();
+    final List<CategoryModel> userCategories =
+        categoriesBox.values.where((CategoryModel category) => !category.isDefault).toList();
 
-    for (final category in userCategories) {
+    for (final CategoryModel category in userCategories) {
       await categoriesBox.delete(category.id);
     }
   }
@@ -353,7 +353,7 @@ class HiveService {
     final Box settingsBox = Hive.box<dynamic>(_settingsBoxName);
 
     // 获取所有设置键
-    final allKeys = settingsBox.keys.toList();
+    final List allKeys = settingsBox.keys.toList();
 
     // 删除非AI相关的设置
     for (final key in allKeys) {
@@ -403,7 +403,7 @@ class HiveService {
   }
 
   static Future<void> saveAiConfig(
-      String identifier, Map<String, dynamic> config) async {
+      String identifier, Map<String, dynamic> config,) async {
     await saveSetting('ai_config_$identifier', config);
   }
 
@@ -412,17 +412,17 @@ class HiveService {
   }
 
   static String getAiPrompt(dynamic promptEnum, {String defaultValue = ''}) {
-    final key = 'ai_prompt_${promptEnum.toString()}';
+    final String key = 'ai_prompt_${promptEnum.toString()}';
     return getSetting(key, defaultValue: defaultValue) as String;
   }
 
   static Future<void> saveAiPrompt(dynamic promptEnum, String prompt) async {
-    final key = 'ai_prompt_${promptEnum.toString()}';
+    final String key = 'ai_prompt_${promptEnum.toString()}';
     await saveSetting(key, prompt);
   }
 
   static Future<void> deleteAiPrompt(dynamic promptEnum) async {
-    final key = 'ai_prompt_${promptEnum.toString()}';
+    final String key = 'ai_prompt_${promptEnum.toString()}';
     await deleteSetting(key);
   }
 
@@ -462,7 +462,7 @@ class HiveService {
             }
             return <String, String>{}; // 或者其他错误处理
           })
-          .where((map) => map.isNotEmpty)
+          .where((Map<String, String> map) => map.isNotEmpty)
           .toList();
     }
     return null; // 如果没有数据或类型不匹配，返回null

@@ -4,7 +4,6 @@
 // 使用说明：在 pubspec.yaml 中添加依赖：
 //   shared_preferences: ^2.0.0
 
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -334,7 +333,7 @@ class ThemeNotifier extends ChangeNotifier {
   void toggleThemeEngine() {
     _useFlexColorScheme = !_useFlexColorScheme;
     debugPrint(
-        '--- Switched Theme Engine: useFlexColorScheme is now $_useFlexColorScheme ---');
+        '--- Switched Theme Engine: useFlexColorScheme is now $_useFlexColorScheme ---',);
     notifyListeners();
   }
 

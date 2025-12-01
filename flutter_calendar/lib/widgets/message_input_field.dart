@@ -27,7 +27,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
   }
 
   void _updateSendButtonState() {
-    final hasText = _messageController.text.trim().isNotEmpty;
+    final bool hasText = _messageController.text.trim().isNotEmpty;
     if (_isSendEnabled != hasText) {
       setState(() {
         _isSendEnabled = hasText;
@@ -36,11 +36,11 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
   }
 
   void _sendMessage() {
-    final message = _messageController.text.trim();
+    final String message = _messageController.text.trim();
     if (message.isEmpty) return;
 
     // 使用 ref.read 而不是 ref.watch，避免不必要的重绘
-    final notifier = ref.read(aiChatProvider.notifier);
+    final AiChatV2Notifier notifier = ref.read(aiChatProvider.notifier);
     notifier.sendMessage(message);
 
     _messageController.clear();
@@ -50,13 +50,13 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
   @override
   Widget build(BuildContext context) {
     // 监听加载状态来控制发送按钮的可用性
-    final isLoading = ref.watch(aiChatProvider.select((s) => s.isLoading));
+    final bool isLoading = ref.watch(aiChatProvider.select((AiChatV2State s) => s.isLoading));
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 8,
@@ -65,7 +65,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         ],
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           Expanded(
             child: TextField(
               controller: _messageController,
@@ -99,7 +99,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.onPrimary),
+                          Theme.of(context).colorScheme.onPrimary,),
                     ),
                   )
                 : const Text('发送'),

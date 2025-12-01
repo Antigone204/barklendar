@@ -29,7 +29,7 @@ class UnconfiguredAIService implements AIService {
 
   @override
   Future<Map<String, dynamic>> testConnection() async {
-    return {
+    return <String, dynamic>{
       'success': false,
       'message': 'AI服务未配置',
       'error': '请先在设置中配置AI服务',

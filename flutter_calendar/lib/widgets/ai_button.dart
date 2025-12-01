@@ -327,7 +327,7 @@ class AIStreamingBubble extends StatelessWidget {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         message,
                         style: TextStyle(
@@ -337,7 +337,7 @@ class AIStreamingBubble extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Row(
-                        children: [
+                        children: <Widget>[
                           const SizedBox(
                             width: 12,
                             height: 12,

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ai_smart_calendar/providers/ai_chat_provider.dart';
@@ -54,17 +53,17 @@ class _MessageListViewState extends ConsumerState<MessageListView> {
   @override
   Widget build(BuildContext context) {
     // 添加获取状态的代码
-    final messages = ref.watch(aiChatProvider.select((s) => s.messages));
-    final currentTurn = ref.watch(aiChatProvider.select((s) => s.currentTurn));
+    final List<ChatMessage> messages = ref.watch(aiChatProvider.select((AiChatV2State s) => s.messages));
+    final AiTurnState? currentTurn = ref.watch(aiChatProvider.select((AiChatV2State s) => s.currentTurn));
 
     // 修改 ListView.builder 的 itemCount
-    final hasTemporaryState = currentTurn != null;
+    final bool hasTemporaryState = currentTurn != null;
 
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: messages.length + (hasTemporaryState ? 1 : 0),
-      itemBuilder: (context, index) {
+      itemBuilder: (BuildContext context, int index) {
         // 完全替换掉 ListView.builder 的 itemBuilder 的全部内容
         if (index < messages.length) {
           // 将 ChatMessage 包装在 PersistedMessage 中
@@ -75,17 +74,17 @@ class _MessageListViewState extends ConsumerState<MessageListView> {
         if (currentTurn != null) {
           switch (currentTurn) {
             case AiTurnStateThinking():
-              return const StatusBubble(text: "思考中...", showIndicator: true);
-            case AiTurnStateCallingTool(toolName: final toolName):
+              return const StatusBubble(text: '思考中...', showIndicator: true);
+            case AiTurnStateCallingTool(toolName: final String toolName):
               return StatusBubble(
-                  text: "正在调用工具: $toolName", showIndicator: true);
-            case AiTurnStateStreamingContent(contentChunk: final content):
+                  text: '正在调用工具: $toolName', showIndicator: true,);
+            case AiTurnStateStreamingContent(contentChunk: final String content):
               // 将流式内容包装在 TemporaryAiMessage 中
               return MessageBubble(
                   message:
-                      TemporaryAiMessage(content: content, isPartial: true));
-            case AiTurnStateError(message: final errorMsg):
-              return StatusBubble(text: "发生错误: $errorMsg", isError: true);
+                      TemporaryAiMessage(content: content, isPartial: true),);
+            case AiTurnStateError(message: final String errorMsg):
+              return StatusBubble(text: '发生错误: $errorMsg', isError: true);
             case AiTurnStateCompleted():
               return const SizedBox.shrink();
           }
@@ -112,9 +111,9 @@ class StatusBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textColor = isError
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+    final Color textColor = isError
         ? colorScheme.onErrorContainer
         : colorScheme.onSecondaryContainer;
 
@@ -129,7 +128,7 @@ class StatusBubble extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: <Widget>[
           if (showIndicator)
             Container(
               width: 14,
@@ -164,11 +163,11 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isUser = message.isFromUser;
+    final ThemeData theme = Theme.of(context);
+    final bool isUser = message.isFromUser;
 
     // 临时的、正在流式输出的消息使用斜体
-    final fontStyle = (message is TemporaryAiMessage &&
+    final FontStyle fontStyle = (message is TemporaryAiMessage &&
             (message as TemporaryAiMessage).isPartial)
         ? FontStyle.italic
         : FontStyle.normal;
@@ -183,16 +182,16 @@ class MessageBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: isUser
               ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceVariant,
+              : theme.colorScheme.surfaceContainerHighest,
           borderRadius: isUser
               ? const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
-                  bottomLeft: Radius.circular(20))
+                  bottomLeft: Radius.circular(20),)
               : const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
-                  bottomRight: Radius.circular(20)),
+                  bottomRight: Radius.circular(20),),
         ),
         child: Text(
           message.content,

@@ -51,7 +51,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
     _dueTime = null;
     _priority = TaskPriority.medium;
     _categoryId = 'work';
-    _tags = [];
+    _tags = <String>[];
     _tagController = TextEditingController();
 
     // 优先使用传入的 initialTask，如果没有则从 provider 加载
@@ -98,7 +98,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
       appBar: AppBar(
         title: Text(_isEditing
             ? AppLocalizations.of(context)!.editTask
-            : AppLocalizations.of(context)!.newTask),
+            : AppLocalizations.of(context)!.newTask,),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
         leading: IconButton(
@@ -422,14 +422,14 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
 
   Widget _buildNotificationSection() {
     // 定义提醒偏移量选项
-    final List<Map<String, dynamic>> reminderOptions = [
-      {'label': '准时提醒', 'minutes': 0},
-      {'label': '提前5分钟', 'minutes': 5},
-      {'label': '提前15分钟', 'minutes': 15},
-      {'label': '提前30分钟', 'minutes': 30},
-      {'label': '提前1小时', 'minutes': 60},
-      {'label': '提前2小时', 'minutes': 120},
-      {'label': '提前1天', 'minutes': 1440},
+    final List<Map<String, dynamic>> reminderOptions = <Map<String, dynamic>>[
+      <String, dynamic>{'label': '准时提醒', 'minutes': 0},
+      <String, dynamic>{'label': '提前5分钟', 'minutes': 5},
+      <String, dynamic>{'label': '提前15分钟', 'minutes': 15},
+      <String, dynamic>{'label': '提前30分钟', 'minutes': 30},
+      <String, dynamic>{'label': '提前1小时', 'minutes': 60},
+      <String, dynamic>{'label': '提前2小时', 'minutes': 120},
+      <String, dynamic>{'label': '提前1天', 'minutes': 1440},
     ];
 
     // 如果没有设置偏移量，使用全局默认值
@@ -486,7 +486,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
                 DropdownButton<int>(
                   value: currentOffset,
                   isExpanded: true,
-                  items: reminderOptions.map((option) {
+                  items: reminderOptions.map((Map<String, dynamic> option) {
                     return DropdownMenuItem<int>(
                       value: option['minutes'] as int,
                       child: Text(option['label'] as String),
@@ -577,13 +577,13 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
   // 从 provider 中加载任务数据
   void _loadTaskFromProvider() {
     try {
-      final tasks = ref.read(tasksProvider).value;
+      final List<TaskModel>? tasks = ref.read(tasksProvider).value;
       if (tasks != null && widget.taskId != null) {
         debugPrint('正在加载任务 ID: ${widget.taskId}');
         debugPrint('可用任务数量: ${tasks.length}');
 
-        final task = tasks.firstWhere(
-          (t) => t.id == widget.taskId,
+        final TaskModel task = tasks.firstWhere(
+          (TaskModel t) => t.id == widget.taskId,
           orElse: () => throw Exception('未找到 ID 为 ${widget.taskId} 的任务'),
         );
 
@@ -694,7 +694,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
 
   void _deleteTask() {
     // 保存页面的 context，以便在对话框关闭后使用
-    final pageContext = context;
+    final BuildContext pageContext = context;
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
@@ -726,7 +726,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
                   ScaffoldMessenger.of(pageContext).showSnackBar(
                     SnackBar(
                       content: Text(
-                          '${AppLocalizations.of(pageContext)!.deleteFailed}: $e'),
+                          '${AppLocalizations.of(pageContext)!.deleteFailed}: $e',),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -738,7 +738,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
               }
             },
             child: Text(AppLocalizations.of(dialogContext)!.delete,
-                style: const TextStyle(color: Colors.red)),
+                style: const TextStyle(color: Colors.red),),
           ),
         ],
       ),

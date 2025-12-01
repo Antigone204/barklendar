@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +25,6 @@ class ThemeDao {
       return FlexThemeData.light(
         // Or .dark based on brightness
         colorScheme: colorScheme,
-        useMaterial3: true,
       );
       // ... 确保亮暗模式分支正确
     } else {

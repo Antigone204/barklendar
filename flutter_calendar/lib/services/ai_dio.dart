@@ -17,7 +17,7 @@ class AiDio {
       connectTimeout: defaultConnectTimeout,
       receiveTimeout: defaultReceiveTimeout,
       sendTimeout: defaultSendTimeout,
-    ));
+    ),);
   }
 
   void newDio({
@@ -29,7 +29,7 @@ class AiDio {
       connectTimeout: connectTimeout ?? defaultConnectTimeout,
       receiveTimeout: receiveTimeout ?? defaultReceiveTimeout,
       sendTimeout: sendTimeout ?? defaultSendTimeout,
-    ));
+    ),);
   }
 
   void cancel() {

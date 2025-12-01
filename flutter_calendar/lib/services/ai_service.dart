@@ -25,22 +25,22 @@ class AiService {
     bool useCache = true, // 新增参数控制是否使用缓存
   }) async* {
     identifier ??= HiveService.selectedAiService;
-    config ??= HiveService.getAiConfig(identifier) ?? {};
+    config ??= HiveService.getAiConfig(identifier) ?? <String, String>{};
     String buffer = '';
 
-    final url = config['url'];
+    final String? url = config['url'];
     if (url == null || url.isEmpty) {
       yield 'AI服务未配置';
       return;
     }
 
-    final messagesStr =
-        messages.map((m) => '${m['role']}: ${m['content']}').join('\n');
-    final hash = messagesStr.hashCode;
+    final String messagesStr =
+        messages.map((Map<String, dynamic> m) => '${m['role']}: ${m['content']}').join('\n');
+    final int hash = messagesStr.hashCode;
 
     // 只有在启用缓存且不强制重新生成时才检查缓存
     if (useCache && !regenerate) {
-      final aiCache = await AiCache.getAiCache(hash);
+      final String? aiCache = await AiCache.getAiCache(hash);
       if (aiCache != null && aiCache.isNotEmpty) {
         yield aiCache;
         return;
@@ -49,10 +49,10 @@ class AiService {
 
     try {
       // 从配置中获取必要参数
-      final modelId = config['model'] ?? 'gpt-3.5-turbo';
-      final toolsList = ToolRegistryService().generateToolSchemas();
+      final String modelId = config['model'] ?? 'gpt-3.5-turbo';
+      final List<Map<String, dynamic>> toolsList = ToolRegistryService().generateToolSchemas();
 
-      final requestBody = {
+      final Map<String, Object> requestBody = <String, Object>{
         'model': modelId,
         'messages': messages,
         'tools': toolsList,
@@ -60,13 +60,13 @@ class AiService {
         'stream': true,
       };
 
-      Stream<String> stream = AiFactory.generateStream(
+      final Stream<String> stream = AiFactory.generateStream(
         identifier,
         messages,
         config,
       );
 
-      await for (final chunk in stream) {
+      await for (final String chunk in stream) {
         // ---- 部署日志探针 ----
         if (kDebugMode) {
           print('[STREAM LOG] Raw data chunk received: $chunk');
@@ -91,20 +91,20 @@ class AiService {
     Map<String, String>? config,
   }) async {
     identifier ??= HiveService.selectedAiService;
-    config ??= HiveService.getAiConfig(identifier) ?? {};
+    config ??= HiveService.getAiConfig(identifier) ?? <String, String>{};
 
-    final url = config['url'];
+    final String? url = config['url'];
     if (url == null || url.isEmpty) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': 'API端点未配置',
         'error': '请先配置API端点',
       };
     }
 
-    final apiKey = config['api_key'];
+    final String? apiKey = config['api_key'];
     if (apiKey == null || apiKey.isEmpty || apiKey == 'YOUR_API_KEY') {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': 'API密钥未配置',
         'error': '请先配置有效的API密钥',
@@ -113,10 +113,10 @@ class AiService {
 
     try {
       // 使用AI工厂创建客户端并测试连接
-      final client = _createClient(identifier, config);
+      final AiClient client = _createClient(identifier, config);
       return await client.testConnection();
     } catch (e) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': '连接测试失败',
         'error': e.toString(),
@@ -127,22 +127,22 @@ class AiService {
   /// 创建AI客户端实例
   static AiClient _createClient(String identifier, Map<String, String> config) {
     // 检查配置中的type字段，如果为'generic'则使用通用客户端
-    final type = config[AiConfigKeys.type];
+    final String? type = config[AiConfigKeys.type];
     if (type == 'generic') {
       return GenericOpenAiCompatibleClient(config);
     }
 
     switch (identifier) {
-      case "openai":
+      case 'openai':
         return OpenAiClient(config);
-      case "claude":
+      case 'claude':
         return ClaudeClient(config);
-      case "gemini":
+      case 'gemini':
         return GeminiClient(config);
-      case "deepseek":
+      case 'deepseek':
         return DeepSeekClient(config);
       default:
-        throw Exception("Invalid AI identifier: $identifier");
+        throw Exception('Invalid AI identifier: $identifier');
     }
   }
 
@@ -166,15 +166,15 @@ class AiService {
 
 📊 总体统计：
 • 总任务数: ${allTasks.length}
-• 已完成: ${allTasks.where((t) => t.isCompleted).length}
-• 待完成: ${allTasks.where((t) => !t.isCompleted).length}
-• 过期任务: ${allTasks.where((t) => !t.isCompleted && t.dueDate != null && t.dueDate!.isBefore(DateTime.now())).length}
+• 已完成: ${allTasks.where((TaskModel t) => t.isCompleted).length}
+• 待完成: ${allTasks.where((TaskModel t) => !t.isCompleted).length}
+• 过期任务: ${allTasks.where((TaskModel t) => !t.isCompleted && t.dueDate != null && t.dueDate!.isBefore(DateTime.now())).length}
 
 📅 今日任务 (${DateUtils.formatChineseDate(DateTime.now())}):''');
 
       // 添加今日任务
       final DateTime today = DateTime.now();
-      final List<TaskModel> todayTasks = allTasks.where((task) {
+      final List<TaskModel> todayTasks = allTasks.where((TaskModel task) {
         if (task.dueDate == null) return false;
         return task.dueDate!.year == today.year &&
             task.dueDate!.month == today.month &&
@@ -184,7 +184,7 @@ class AiService {
       if (todayTasks.isEmpty) {
         context.writeln('• 今天没有安排任务');
       } else {
-        for (final task in todayTasks) {
+        for (final TaskModel task in todayTasks) {
           context.writeln('• ${task.isCompleted ? '✅' : '⏰'} ${task.title}');
         }
       }
@@ -264,20 +264,20 @@ class AiService {
       // 验证任务是否真的添加成功
       final TaskModel? addedTask = HiveService.getTask(taskId);
       if (addedTask == null) {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': '任务创建失败：无法验证任务是否保存成功',
           'task': null,
         };
       }
 
-      return {
+      return <String, dynamic>{
         'success': true,
         'message': '任务创建成功',
         'task': newTask,
       };
     } catch (e) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': '创建任务失败: $e',
         'task': null,
@@ -290,13 +290,13 @@ class AiService {
     try {
       await HiveService.updateTask(task);
 
-      return {
+      return <String, dynamic>{
         'success': true,
         'message': '任务更新成功',
         'task': task,
       };
     } catch (e) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': '更新任务失败: $e',
         'task': null,
@@ -309,12 +309,12 @@ class AiService {
     try {
       await HiveService.deleteTask(taskId);
 
-      return {
+      return <String, dynamic>{
         'success': true,
         'message': '任务删除成功',
       };
     } catch (e) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': '删除任务失败: $e',
       };
@@ -323,11 +323,11 @@ class AiService {
 
   /// 标记任务为完成/未完成
   static Future<Map<String, dynamic>> toggleTaskCompletion(
-      String taskId, bool completed) async {
+      String taskId, bool completed,) async {
     try {
       final TaskModel? task = HiveService.getTask(taskId);
       if (task == null) {
-        return {
+        return <String, dynamic>{
           'success': false,
           'message': '找不到指定的任务',
         };
@@ -340,13 +340,13 @@ class AiService {
 
       await HiveService.updateTask(updatedTask);
 
-      return {
+      return <String, dynamic>{
         'success': true,
         'message': completed ? '任务标记为已完成' : '任务标记为未完成',
         'task': updatedTask,
       };
     } catch (e) {
-      return {
+      return <String, dynamic>{
         'success': false,
         'message': '更新任务状态失败: $e',
         'task': null,
@@ -358,7 +358,7 @@ class AiService {
   static List<TaskModel> searchTasks(String query) {
     final List<TaskModel> allTasks = HiveService.getAllTasks();
     return allTasks
-        .where((task) => task.title.toLowerCase().contains(query.toLowerCase()))
+        .where((TaskModel task) => task.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
   }
 
@@ -369,7 +369,7 @@ class AiService {
 
   /// 解析用户意图并返回一个结构化的结果（新版）
   static Future<IntentResult> processUserIntent(
-      String userMessage, String aiResponse) async {
+      String userMessage, String aiResponse,) async {
     try {
       final RegExp actionRegex =
           RegExp(r'\[AI_ACTION\]\s*(\{.*?\})\s*\[/AI_ACTION\]', dotAll: true);
@@ -390,14 +390,13 @@ class AiService {
         final String title = actionData['title'] as String;
         final DateTime dueDate =
             DateTime.parse(actionData['dueDate'] as String);
-        final newTask = TaskModel(
+        final TaskModel newTask = TaskModel(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           title: title,
           description: '由AI助手创建',
           dueDate: dueDate,
           createdAt: DateTime.now(),
           categoryId: 'default',
-          priority: TaskPriority.medium,
         );
         return CreateTaskSuccess(
           '$naturalResponse\n\n✅ 任务已为您准备好！',
@@ -414,7 +413,7 @@ class AiService {
   /// 生成今天的日程响应
   static String _generateTodayResponse(List<TaskModel> allTasks) {
     final DateTime today = DateTime.now();
-    final List<TaskModel> todayTasks = allTasks.where((task) {
+    final List<TaskModel> todayTasks = allTasks.where((TaskModel task) {
       if (task.dueDate == null) return false;
       return task.dueDate!.year == today.year &&
           task.dueDate!.month == today.month &&
@@ -432,7 +431,7 @@ class AiService {
     int completedCount = 0;
     int pendingCount = 0;
 
-    for (final task in todayTasks) {
+    for (final TaskModel task in todayTasks) {
       if (task.isCompleted) {
         response.writeln('✅ ${task.title}');
         completedCount++;
@@ -457,7 +456,7 @@ class AiService {
   /// 生成明天的日程响应
   static String _generateTomorrowResponse(List<TaskModel> allTasks) {
     final DateTime tomorrow = DateTime.now().add(const Duration(days: 1));
-    final List<TaskModel> tomorrowTasks = allTasks.where((task) {
+    final List<TaskModel> tomorrowTasks = allTasks.where((TaskModel task) {
       if (task.dueDate == null) return false;
       return task.dueDate!.year == tomorrow.year &&
           task.dueDate!.month == tomorrow.month &&
@@ -472,9 +471,9 @@ class AiService {
     final StringBuffer response = StringBuffer();
     response.writeln('📅 $dateStr 的日程安排：\n');
 
-    for (final task in tomorrowTasks) {
+    for (final TaskModel task in tomorrowTasks) {
       response.writeln('📌 ${task.title}');
-      if (task.description != null && task.description!.isNotEmpty) {
+      if (task.description.isNotEmpty) {
         response.writeln('   📝 ${task.description}');
       }
     }
@@ -489,7 +488,7 @@ class AiService {
     final DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     final DateTime endOfWeek = startOfWeek.add(const Duration(days: 6));
 
-    final List<TaskModel> weekTasks = allTasks.where((task) {
+    final List<TaskModel> weekTasks = allTasks.where((TaskModel task) {
       if (task.dueDate == null) return false;
       return !task.dueDate!.isBefore(startOfWeek) &&
           !task.dueDate!.isAfter(endOfWeek);
@@ -499,33 +498,33 @@ class AiService {
       return '📅 本周还没有安排任何任务！\n\n建议：\n• 制定周计划\n• 设置长期目标\n• 合理安排时间';
     }
 
-    final Map<int, List<TaskModel>> tasksByDay = {};
-    for (final task in weekTasks) {
+    final Map<int, List<TaskModel>> tasksByDay = <int, List<TaskModel>>{};
+    for (final TaskModel task in weekTasks) {
       final int weekday = task.dueDate!.weekday;
-      tasksByDay.putIfAbsent(weekday, () => []).add(task);
+      tasksByDay.putIfAbsent(weekday, () => <TaskModel>[]).add(task);
     }
 
     final StringBuffer response = StringBuffer();
     response.writeln(
-        '📅 本周日程安排（${DateUtils.formatChineseDate(startOfWeek)} - ${DateUtils.formatChineseDate(endOfWeek)}）：\n');
+        '📅 本周日程安排（${DateUtils.formatChineseDate(startOfWeek)} - ${DateUtils.formatChineseDate(endOfWeek)}）：\n',);
 
     for (int day = 1; day <= 7; day++) {
       final List<TaskModel>? dayTasks = tasksByDay[day];
       if (dayTasks != null && dayTasks.isNotEmpty) {
         final DateTime dayDate = startOfWeek.add(Duration(days: day - 1));
         response.writeln(
-            '${_getWeekdayEmoji(day)} ${DateUtils.formatChineseDate(dayDate)}：');
-        for (final task in dayTasks) {
+            '${_getWeekdayEmoji(day)} ${DateUtils.formatChineseDate(dayDate)}：',);
+        for (final TaskModel task in dayTasks) {
           response.writeln('   ${task.isCompleted ? '✅' : '⏰'} ${task.title}');
         }
-        response.writeln('');
+        response.writeln();
       }
     }
 
     response.writeln('📊 本周统计：');
     response.writeln('• 总任务数: ${weekTasks.length}');
-    response.writeln('• 已完成: ${weekTasks.where((t) => t.isCompleted).length}');
-    response.writeln('• 待完成: ${weekTasks.where((t) => !t.isCompleted).length}');
+    response.writeln('• 已完成: ${weekTasks.where((TaskModel t) => t.isCompleted).length}');
+    response.writeln('• 待完成: ${weekTasks.where((TaskModel t) => !t.isCompleted).length}');
 
     return response.toString();
   }
@@ -541,24 +540,24 @@ class AiService {
 
     response.writeln('📊 总体情况：');
     response.writeln('• 总任务数: ${allTasks.length}');
-    response.writeln('• 已完成: ${allTasks.where((t) => t.isCompleted).length}');
-    response.writeln('• 待完成: ${allTasks.where((t) => !t.isCompleted).length}');
+    response.writeln('• 已完成: ${allTasks.where((TaskModel t) => t.isCompleted).length}');
+    response.writeln('• 待完成: ${allTasks.where((TaskModel t) => !t.isCompleted).length}');
     response.writeln(
-        '• 过期任务: ${allTasks.where((t) => !t.isCompleted && t.dueDate != null && t.dueDate!.isBefore(DateTime.now())).length}');
+        '• 过期任务: ${allTasks.where((TaskModel t) => !t.isCompleted && t.dueDate != null && t.dueDate!.isBefore(DateTime.now())).length}',);
 
     // 按分类统计
-    final Map<String, int> tasksByCategory = {};
-    for (final task in allTasks) {
+    final Map<String, int> tasksByCategory = <String, int>{};
+    for (final TaskModel task in allTasks) {
       tasksByCategory.update(
         task.categoryId,
-        (count) => count + 1,
+        (int count) => count + 1,
         ifAbsent: () => 1,
       );
     }
 
     if (tasksByCategory.isNotEmpty) {
       response.writeln('\n🏷️ 按分类统计：');
-      tasksByCategory.forEach((categoryId, count) {
+      tasksByCategory.forEach((String categoryId, int count) {
         response.writeln('• $categoryId: $count 个任务');
       });
     }
@@ -569,7 +568,7 @@ class AiService {
   /// 生成已完成任务的响应
   static String _generateCompletedTasksResponse(List<TaskModel> allTasks) {
     final List<TaskModel> completedTasks =
-        allTasks.where((t) => t.isCompleted).toList();
+        allTasks.where((TaskModel t) => t.isCompleted).toList();
 
     if (completedTasks.isEmpty) {
       return '✅ 目前没有已完成的任务！\n\n建议：\n• 开始完成一些任务\n• 设置可实现的目标\n• 庆祝每一个小成就';
@@ -578,7 +577,7 @@ class AiService {
     final StringBuffer response = StringBuffer();
     response.writeln('✅ 已完成的任务：\n');
 
-    for (final task in completedTasks.take(10)) {
+    for (final TaskModel task in completedTasks.take(10)) {
       response.writeln('• ${task.title}');
       if (task.dueDate != null) {
         response.writeln('   📅 ${DateUtils.formatChineseDate(task.dueDate!)}');
@@ -596,7 +595,7 @@ class AiService {
   /// 生成待完成任务的响应
   static String _generatePendingTasksResponse(List<TaskModel> allTasks) {
     final List<TaskModel> pendingTasks =
-        allTasks.where((t) => !t.isCompleted).toList();
+        allTasks.where((TaskModel t) => !t.isCompleted).toList();
 
     if (pendingTasks.isEmpty) {
       return '🎊 太棒了！所有任务都已完成！\n\n您可以：\n• 创建新的挑战\n• 休息一下\n• 回顾已完成的任务';
@@ -606,13 +605,13 @@ class AiService {
     response.writeln('⏰ 待完成的任务：\n');
 
     // 按截止日期排序
-    pendingTasks.sort((a, b) {
+    pendingTasks.sort((TaskModel a, TaskModel b) {
       if (a.dueDate == null) return 1;
       if (b.dueDate == null) return -1;
       return a.dueDate!.compareTo(b.dueDate!);
     });
 
-    for (final task in pendingTasks.take(10)) {
+    for (final TaskModel task in pendingTasks.take(10)) {
       final String dueInfo = task.dueDate != null
           ? ' (📅 ${DateUtils.formatChineseDate(task.dueDate!)})'
           : ' (无截止日期)';
@@ -631,10 +630,10 @@ class AiService {
   static String _generateOverdueTasksResponse(List<TaskModel> allTasks) {
     final DateTime now = DateTime.now();
     final List<TaskModel> overdueTasks = allTasks
-        .where((task) =>
+        .where((TaskModel task) =>
             !task.isCompleted &&
             task.dueDate != null &&
-            task.dueDate!.isBefore(now))
+            task.dueDate!.isBefore(now),)
         .toList();
 
     if (overdueTasks.isEmpty) {
@@ -644,7 +643,7 @@ class AiService {
     final StringBuffer response = StringBuffer();
     response.writeln('⚠️ 过期任务：\n');
 
-    for (final task in overdueTasks) {
+    for (final TaskModel task in overdueTasks) {
       final String overdueDays = _calculateOverdueDays(task.dueDate!, now);
       response.writeln('• ${task.title} (已过期 $overdueDays)');
     }
@@ -656,15 +655,15 @@ class AiService {
 
   /// 生成通用响应
   static String _generateGeneralResponse(
-      List<TaskModel> allTasks, String userMessage) {
+      List<TaskModel> allTasks, String userMessage,) {
     final int totalTasks = allTasks.length;
-    final int completedTasks = allTasks.where((t) => t.isCompleted).length;
+    final int completedTasks = allTasks.where((TaskModel t) => t.isCompleted).length;
     final int pendingTasks = totalTasks - completedTasks;
     final int overdueTasks = allTasks
-        .where((task) =>
+        .where((TaskModel task) =>
             !task.isCompleted &&
             task.dueDate != null &&
-            task.dueDate!.isBefore(DateTime.now()))
+            task.dueDate!.isBefore(DateTime.now()),)
         .length;
 
     return '''根据您的日程数据，我为您提供以下信息：
@@ -716,8 +715,8 @@ class AiService {
 
   /// 计算过期天数
   static String _calculateOverdueDays(DateTime dueDate, DateTime now) {
-    final difference = now.difference(dueDate);
-    final days = difference.inDays;
+    final Duration difference = now.difference(dueDate);
+    final int days = difference.inDays;
     if (days == 0) {
       return '今天';
     } else if (days == 1) {

@@ -5,22 +5,22 @@ class Logger {
   static const bool _debugMode = true;
 
   static void logNotificationSettings(
-      String action, Map<String, dynamic> data) {
+      String action, Map<String, dynamic> data,) {
     if (!_debugMode) return;
 
-    final timestamp = DateTime.now();
+    final DateTime timestamp = DateTime.now();
     debugPrint('[通知设置] $action - $timestamp');
-    data.forEach((key, value) {
+    data.forEach((String key, value) {
       debugPrint('  - $key: $value');
     });
     debugPrint('---');
   }
 
   static void logSettingChange(
-      String settingKey, dynamic oldValue, dynamic newValue) {
+      String settingKey, dynamic oldValue, dynamic newValue,) {
     if (!_debugMode) return;
 
-    final timestamp = DateTime.now();
+    final DateTime timestamp = DateTime.now();
     debugPrint('[设置变更] $timestamp');
     debugPrint('  - 设置项: $settingKey');
     debugPrint('  - 旧值: $oldValue');
@@ -29,10 +29,10 @@ class Logger {
   }
 
   static void logPersistenceOperation(
-      String operation, String key, dynamic value) {
+      String operation, String key, dynamic value,) {
     if (!_debugMode) return;
 
-    final timestamp = DateTime.now();
+    final DateTime timestamp = DateTime.now();
     debugPrint('[持久化操作] $operation - $timestamp');
     debugPrint('  - 键: $key');
     debugPrint('  - 值: $value');
