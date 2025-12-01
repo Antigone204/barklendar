@@ -152,17 +152,17 @@ class HiveService {
   // --- Settings 相关操作 ---
 
   static Future<void> saveSetting(String key, dynamic value) async {
-    final Box box = Hive.box<dynamic>(_settingsBoxName);
+    final Box<dynamic> box = Hive.box<dynamic>(_settingsBoxName);
     await box.put(key, value);
   }
 
   static dynamic getSetting(String key, {dynamic defaultValue}) {
-    final Box box = Hive.box<dynamic>(_settingsBoxName);
+    final Box<dynamic> box = Hive.box<dynamic>(_settingsBoxName);
     return box.get(key, defaultValue: defaultValue);
   }
 
   static Future<void> deleteSetting(String key) async {
-    final Box box = Hive.box<dynamic>(_settingsBoxName);
+    final Box<dynamic> box = Hive.box<dynamic>(_settingsBoxName);
     await box.delete(key);
   }
 
@@ -203,7 +203,7 @@ class HiveService {
     final Box<TaskModel> tasksBox = Hive.box<TaskModel>(_tasksBoxName);
     final Box<CategoryModel> categoriesBox =
         Hive.box<CategoryModel>(_categoriesBoxName);
-    final Box settingsBox = Hive.box<dynamic>(_settingsBoxName);
+    final Box<dynamic> settingsBox = Hive.box<dynamic>(_settingsBoxName);
 
     return <String, dynamic>{
       'tasks': tasksBox.values.map((TaskModel task) => task.toJson()).toList(),
@@ -223,7 +223,7 @@ class HiveService {
     final Box<TaskModel> tasksBox = Hive.box<TaskModel>(_tasksBoxName);
     final Box<CategoryModel> categoriesBox =
         Hive.box<CategoryModel>(_categoriesBoxName);
-    final Box settingsBox = Hive.box<dynamic>(_settingsBoxName);
+    final Box<dynamic> settingsBox = Hive.box<dynamic>(_settingsBoxName);
 
     if (data['tasks'] is List) {
       for (final taskData in data['tasks'] as List) {
@@ -265,7 +265,7 @@ class HiveService {
         '[DataClear] Categories box cleared. Size: ${categoriesBox.length}',
         name: 'dataclear.debug',);
 
-    final Box settingsBox = Hive.box<dynamic>(_settingsBoxName);
+    final Box<dynamic> settingsBox = Hive.box<dynamic>(_settingsBoxName);
     await settingsBox.clear();
     developer.log(
         '[DataClear] Settings box cleared. Size: ${settingsBox.length}',
@@ -292,7 +292,7 @@ class HiveService {
 
   /// 清除AI相关数据（配置、提示词、缓存）
   static Future<void> clearAIData(WidgetRef ref) async {
-    final Box settingsBox = Hive.box<dynamic>(_settingsBoxName);
+    final Box<dynamic> settingsBox = Hive.box<dynamic>(_settingsBoxName);
     final List allKeys = settingsBox.keys.toList();
 
     // **优化点**：使用一个Set明确定义所有与新AI配置相关的键
@@ -449,8 +449,8 @@ class HiveService {
 
   /// 加载AI配置列表
   static Future<List<Map<String, String>>?> loadAiConfigs() async {
-    final Box box = Hive.box<dynamic>(_settingsBoxName);
-    final data = box.get('ai_configs');
+    final Box<dynamic> box = Hive.box<dynamic>(_settingsBoxName);
+    final dynamic data = box.get('ai_configs');
 
     // 类型安全检查和转换
     if (data is List) {
@@ -470,8 +470,8 @@ class HiveService {
 
   /// 加载激活的配置ID
   static Future<String?> loadActiveAiConfigId() async {
-    final Box box = Hive.box<dynamic>(_settingsBoxName);
-    final data = box.get('active_ai_config_id');
+    final Box<dynamic> box = Hive.box<dynamic>(_settingsBoxName);
+    final dynamic data = box.get('active_ai_config_id');
 
     if (data is String) {
       return data;

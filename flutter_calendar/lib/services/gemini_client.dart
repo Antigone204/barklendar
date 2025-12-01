@@ -26,7 +26,8 @@ class GeminiClient extends AiClient {
     final Dio dio = AiDio.instance.dio;
 
     try {
-      final Response response = await dio.post(
+      final Response<ResponseBody> response =
+          await dio.post<ResponseBody>(
         url,
         options: Options(
           headers: getHeaders(),
@@ -36,7 +37,12 @@ class GeminiClient extends AiClient {
         data: generateRequestBody(messages),
       );
 
-      final Stream<List<int>> stream = response.data.stream as Stream<List<int>>;
+      final ResponseBody? responseBody = response.data;
+      if (responseBody == null) {
+        throw Exception('Gemini 响应体为空');
+      }
+      final Stream<List<int>> stream =
+          responseBody.stream as Stream<List<int>>;
       final List<int> buffer = <int>[];
       String remainingData = '';
 

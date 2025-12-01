@@ -72,7 +72,8 @@ abstract class AiClient {
       final String apiUrl =
           url.endsWith('/chat/completions') ? url : '$url/chat/completions';
 
-      final Response response = await dio.post(
+      final Response<Map<String, dynamic>> response =
+          await dio.post<Map<String, dynamic>>(
         apiUrl,
         options: Options(
           headers: getHeaders(),

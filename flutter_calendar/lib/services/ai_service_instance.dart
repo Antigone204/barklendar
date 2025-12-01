@@ -52,7 +52,8 @@ class AIServiceInstance implements AIService {
       // =======================================================================
 
       // 发送请求
-      final Response response = await dio.post(
+      final Response<Map<String, dynamic>> response =
+          await dio.post<Map<String, dynamic>>(
         apiUrl,
         options: Options(
           headers: <String, dynamic>{
@@ -80,7 +81,7 @@ class AIServiceInstance implements AIService {
       }
 
       // 解码JSON响应
-      final data = response.data;
+      final Map<String, dynamic>? data = response.data;
 
       // ======================= 📍 日志点 3: 解码后的类型 =======================
       developer.log(
@@ -90,7 +91,7 @@ class AIServiceInstance implements AIService {
       // =======================================================================
 
       // 提取消息对象
-      final message = data['choices'][0]['message'];
+      final dynamic message = data?['choices']?[0]?['message'];
 
       // ======================= 📍 日志点 4: Message 对象的类型 =======================
       developer.log(

@@ -278,7 +278,7 @@ class ApiService {
   // 数据备份与恢复
   Future<void> backupData(Map<String, dynamic> data) async {
     try {
-      await _dio.post(
+      await _dio.post<void>(
         '/backup',
         data: data,
       );
@@ -337,7 +337,7 @@ class ApiService {
   // 网络状态检查
   Future<bool> checkNetworkConnection() async {
     try {
-      await _dio.get('/health');
+      await _dio.get<void>('/health');
       return true;
     } catch (e) {
       return false;

@@ -13,7 +13,8 @@ class AiConfigListPage extends ConsumerWidget {
 
     return aiConfigState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (Object error, StackTrace stack) => Center(child: Text('加载失败: $error')),
+      error: (Object error, StackTrace stack) =>
+          Center(child: Text('加载失败: $error')),
       data: (AiConfigState state) {
         final List<Map<String, String>> configs = state.configs;
         final String activeConfigId = state.activeConfigId;
@@ -35,11 +36,15 @@ class AiConfigListPage extends ConsumerWidget {
 
                     return Card(
                       margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4,),
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
                       child: ListTile(
                         leading: isActive
-                            ? const Icon(Icons.check_circle,
-                                color: Colors.green,)
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
                             : const Icon(Icons.circle_outlined),
                         title: Text(
                           config['name'] ?? '未命名配置',
@@ -52,7 +57,8 @@ class AiConfigListPage extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                                '类型: ${_getServiceTypeName(config[AiConfigKeys.type])}',),
+                              '类型: ${_getServiceTypeName(config[AiConfigKeys.type])}',
+                            ),
                             if (config[AiConfigKeys.model]?.isNotEmpty == true)
                               Text('模型: ${config[AiConfigKeys.model]}'),
                             if (config[AiConfigKeys.url]?.isNotEmpty == true)
@@ -119,16 +125,22 @@ class AiConfigListPage extends ConsumerWidget {
     }
   }
 
-  void _navigateToFormPage(BuildContext context,
-      {Map<String, String>? config,}) {
+  void _navigateToFormPage(
+    BuildContext context, {
+    Map<String, String>? config,
+  }) {
     context.pushNamed('ai_service_detail', extra: config);
   }
 
   void _showDeleteDialog(
-      BuildContext context, WidgetRef ref, Map<String, String> config,) {
-    // 保存页面的 context，以便在对话框关闭后使用
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, String> config,
+  ) {
     final BuildContext pageContext = context;
-    showDialog(
+
+    // 【修改点】在这里加上 <void>
+    showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
@@ -137,8 +149,9 @@ class AiConfigListPage extends ConsumerWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                if (dialogContext.canPop()) {
-                  dialogContext.pop();
+                if (dialogContext.mounted) {
+                  // 建议：使用 mounted 检查更安全
+                  Navigator.of(dialogContext).pop(); // 建议：显式调用 Navigator
                 }
               },
               child: const Text('取消'),
@@ -146,15 +159,20 @@ class AiConfigListPage extends ConsumerWidget {
             TextButton(
               onPressed: () {
                 ref.read(aiConfigProvider.notifier).deleteConfig(config['id']!);
-                if (dialogContext.canPop()) {
-                  dialogContext.pop();
+
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
                 }
-                ScaffoldMessenger.of(pageContext).showSnackBar(
-                  SnackBar(
-                    content: Text('已删除 ${config['name']}'),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+
+                // 注意：如果页面被销毁，这里可能会报错，最好加个 mounted 判断
+                if (pageContext.mounted) {
+                  ScaffoldMessenger.of(pageContext).showSnackBar(
+                    SnackBar(
+                      content: Text('已删除 ${config['name']}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
               },
               child: const Text('删除', style: TextStyle(color: Colors.red)),
             ),

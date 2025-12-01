@@ -695,7 +695,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
   void _deleteTask() {
     // 保存页面的 context，以便在对话框关闭后使用
     final BuildContext pageContext = context;
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
         title: Text(AppLocalizations.of(dialogContext)!.confirmDelete),
@@ -747,7 +747,7 @@ class _TodoDetailPageState extends ConsumerState<TodoDetailPage> {
 
   void _getAISuggestions() {
     // TODO: 实现 AI 建议功能
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.aiSuggestions),

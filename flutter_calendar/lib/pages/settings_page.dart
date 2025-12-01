@@ -23,10 +23,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _notificationsEnabled = true;
   bool _taskRemindersEnabled = true;
   bool _dailyDigestEnabled = true;
-  final bool _darkModeEnabled = false;
   bool _aiSuggestionsEnabled = true;
   String _language = '中文';
-  String _themeColor = '蓝色';
 
   @override
   void initState() {
@@ -62,7 +60,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     // Scaffold 由 AdaptiveHome 管理
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -489,9 +486,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _themeColor = name;
-        });
         themeNotifier.setPrimaryColor(color);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -527,7 +521,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showLanguagePicker() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.selectLanguage),
@@ -617,7 +611,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _clearData() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.clearData),
@@ -651,7 +645,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   void _showClearOptions() {
     Navigator.pop(context); // 关闭确认对话框
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: const Text('选择清除类型'),
@@ -839,7 +833,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showAbout() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: const Text('关于 AI Smart Calendar'),

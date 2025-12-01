@@ -141,39 +141,44 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
             TextButton(
-                onPressed: () {
-                  HiveService.deleteAiConfig(
-                    services[currentIndex]['identifier'] as String,
-                  );
-                  services[currentIndex]['config'] = Map<String, String>.from(
-                      initialServicesConfig[currentIndex]['config']
-                          as Map<String, dynamic>,);
-                  setState(() {});
-                },
-                child: const Text('重置'),),
+              onPressed: () {
+                HiveService.deleteAiConfig(
+                  services[currentIndex]['identifier'] as String,
+                );
+                services[currentIndex]['config'] = Map<String, String>.from(
+                  initialServicesConfig[currentIndex]['config']
+                      as Map<String, dynamic>,
+                );
+                setState(() {});
+              },
+              child: const Text('重置'),
+            ),
             TextButton(
-                onPressed: () {
-                  _testAIConnection();
-                },
-                child: const Text('测试'),),
+              onPressed: () {
+                _testAIConnection();
+              },
+              child: const Text('测试'),
+            ),
             TextButton(
-                onPressed: () {
-                  _saveConfig();
-                  setState(() {
-                    showSettings = false;
-                  });
-                },
-                child: const Text('保存'),),
+              onPressed: () {
+                _saveConfig();
+                setState(() {
+                  showSettings = false;
+                });
+              },
+              child: const Text('保存'),
+            ),
             TextButton(
-                onPressed: () {
-                  HiveService.selectedAiService =
-                      services[currentIndex]['identifier'] as String;
-                  _saveConfig();
-                  setState(() {
-                    showSettings = false;
-                  });
-                },
-                child: const Text('应用'),),
+              onPressed: () {
+                HiveService.selectedAiService =
+                    services[currentIndex]['identifier'] as String;
+                _saveConfig();
+                setState(() {
+                  showSettings = false;
+                });
+              },
+              child: const Text('应用'),
+            ),
           ],
         ),
       ],
@@ -191,7 +196,7 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
     // 保存页面的 context，以便在对话框关闭后使用
     final BuildContext pageContext = context;
     // 显示加载对话框
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext loadingDialogContext) => const AlertDialog(
@@ -214,7 +219,8 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
       final Map<String, String> config =
           configMap.map((String key, value) => MapEntry(key, value.toString()));
 
-      final Map<String, dynamic> result = await static_ai.AiService.testConnection(
+      final Map<String, dynamic> result =
+          await static_ai.AiService.testConnection(
         identifier: services[currentIndex]['identifier'] as String,
         config: config,
       );
@@ -225,7 +231,7 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
       }
 
       // 显示测试结果
-      showDialog(
+      showDialog<void>(
         context: pageContext,
         builder: (BuildContext resultDialogContext) => AlertDialog(
           title: Text(result['success'] == true ? '连接成功' : '连接失败'),
@@ -262,7 +268,7 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
       }
 
       // 显示错误信息
-      showDialog(
+      showDialog<void>(
         context: pageContext,
         builder: (BuildContext errorDialogContext) => AlertDialog(
           title: const Text('测试错误'),
@@ -333,72 +339,74 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
   }
 
   void _editPrompt(Map<String, dynamic> prompt) {
-    final TextEditingController controller = TextEditingController(
-      text: HiveService.getAiPrompt(prompt['identifier']).toString() ??
-          '默认提示词内容',
-    );
+    final Object? rawPrompt = HiveService.getAiPrompt(prompt['identifier']);
+    final String initialText =
+        rawPrompt != null ? rawPrompt.toString() : '默认提示词内容';
+    final TextEditingController controller =
+        TextEditingController(text: initialText);
 
-    showDialog(
-        context: context,
-        builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            title: const Text('编辑提示词'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  maxLines: 10,
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('编辑提示词'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                maxLines: 10,
+                controller: controller,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                 ),
-                Wrap(
-                  children: <Widget>[
-                    for (String variable in prompt['variables'] as List<String>)
-                      TextButton(
-                        onPressed: () {
-                          final TextSelection selection = controller.selection;
-                          if (selection.start == -1 || selection.end == -1) {
-                            return;
-                          }
-                          controller.text = controller.text.replaceRange(
-                            selection.start,
-                            selection.end,
-                            '{{$variable}}',
-                          );
-                        },
-                        child: Text('{{$variable}}'),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  HiveService.deleteAiPrompt(prompt['identifier']);
-                  if (dialogContext.canPop()) {
-                    dialogContext.pop();
-                  }
-                },
-                child: const Text('重置'),
               ),
-              TextButton(
-                onPressed: () {
-                  HiveService.saveAiPrompt(
-                    prompt['identifier'],
-                    controller.text,
-                  );
-                  if (dialogContext.canPop()) {
-                    dialogContext.pop();
-                  }
-                },
-                child: const Text('保存'),
+              Wrap(
+                children: <Widget>[
+                  for (String variable in prompt['variables'] as List<String>)
+                    TextButton(
+                      onPressed: () {
+                        final TextSelection selection = controller.selection;
+                        if (selection.start == -1 || selection.end == -1) {
+                          return;
+                        }
+                        controller.text = controller.text.replaceRange(
+                          selection.start,
+                          selection.end,
+                          '{{$variable}}',
+                        );
+                      },
+                      child: Text('{{$variable}}'),
+                    ),
+                ],
               ),
             ],
-          );
-        },);
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                HiveService.deleteAiPrompt(prompt['identifier']);
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
+              },
+              child: const Text('重置'),
+            ),
+            TextButton(
+              onPressed: () {
+                HiveService.saveAiPrompt(
+                  prompt['identifier'],
+                  controller.text,
+                );
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -493,10 +501,11 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
                     width: 100,
                     decoration: BoxDecoration(
                       border: Border.all(
-                          color: HiveService.selectedAiService ==
-                                  (services[index]['identifier'] as String)
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,),
+                        color: HiveService.selectedAiService ==
+                                (services[index]['identifier'] as String)
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -506,7 +515,8 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
                           services[index]['logo'] as String,
                           width: 25,
                           height: 25,
-                          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                          errorBuilder: (BuildContext context, Object error,
+                              StackTrace? stackTrace) {
                             return const Icon(Icons.smart_toy, size: 25);
                           },
                         ),
@@ -545,7 +555,7 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           title: const Text('清空缓存'),
           trailing: const Icon(Icons.delete),
           onTap: () {
-            showDialog(
+            showDialog<void>(
               context: context,
               builder: (BuildContext dialogContext) => AlertDialog(
                 title: const Text('确认清空'),

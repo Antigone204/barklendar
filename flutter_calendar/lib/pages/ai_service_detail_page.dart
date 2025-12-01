@@ -21,7 +21,8 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // 预设数据
-  final Map<String, Map<String, String>> _presets = <String, Map<String, String>>{
+  final Map<String, Map<String, String>> _presets =
+      <String, Map<String, String>>{
     'openai': <String, String>{
       'name': 'OpenAI',
       'url': 'https://api.openai.com/v1',
@@ -178,7 +179,8 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               // 服务预设选择器
               DropdownButtonFormField<String>(
                 initialValue: _selectedPreset,
-                items: _presets.entries.map((MapEntry<String, Map<String, String>> entry) {
+                items: _presets.entries
+                    .map((MapEntry<String, Map<String, String>> entry) {
                   return DropdownMenuItem(
                     value: entry.key,
                     child: Text(entry.value['name']!),
@@ -445,7 +447,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
               title: const Text('清空缓存'),
               trailing: const Icon(Icons.delete),
               onTap: () {
-                showDialog(
+                showDialog<void>(
                   context: context,
                   builder: (BuildContext dialogContext) => AlertDialog(
                     title: const Text('确认清空'),
@@ -509,7 +511,8 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
       };
 
       // 使用 AiService 测试连接
-      final Map<String, dynamic> result = await static_ai.AiService.testConnection(
+      final Map<String, dynamic> result =
+          await static_ai.AiService.testConnection(
         identifier: 'generic', // 统一使用通用类型
         config: currentConfig,
       );
@@ -517,9 +520,11 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
       // 显示测试结果
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['success'] == true
-              ? '连接测试成功！'
-              : '连接测试失败：${result['message']}',),
+          content: Text(
+            result['success'] == true
+                ? '连接测试成功！'
+                : '连接测试失败：${result['message']}',
+          ),
           backgroundColor:
               result['success'] == true ? Colors.green : Colors.red,
         ),
@@ -584,7 +589,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
       }
 
       // 延迟返回，让用户看到成功消息
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       if (mounted && context.canPop()) {
         context.pop();
       }
@@ -636,9 +641,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   }
 
   void _showDeleteDialog() {
-    // 保存页面的 context，以便在对话框关闭后使用
-    final BuildContext pageContext = context;
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
@@ -687,7 +690,7 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
       );
 
       // 延迟返回，让用户看到成功消息
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       if (mounted && context.canPop()) {
         context.pop();
       }
@@ -706,71 +709,73 @@ class _AiServiceDetailPageState extends ConsumerState<AiServiceDetailPage> {
   }
 
   void _editPrompt(Map<String, dynamic> prompt) {
-    final TextEditingController controller = TextEditingController(
-      text: HiveService.getAiPrompt(prompt['identifier']).toString() ??
-          '默认提示词内容',
-    );
+    final Object? rawPrompt = HiveService.getAiPrompt(prompt['identifier']);
+    final String initialText =
+        rawPrompt != null ? rawPrompt.toString() : '默认提示词内容';
+    final TextEditingController controller =
+        TextEditingController(text: initialText);
 
-    showDialog(
-        context: context,
-        builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            title: const Text('编辑提示词'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  maxLines: 10,
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('编辑提示词'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                maxLines: 10,
+                controller: controller,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                 ),
-                Wrap(
-                  children: <Widget>[
-                    for (String variable in prompt['variables'] as List<String>)
-                      TextButton(
-                        onPressed: () {
-                          final TextSelection selection = controller.selection;
-                          if (selection.start == -1 || selection.end == -1) {
-                            return;
-                          }
-                          controller.text = controller.text.replaceRange(
-                            selection.start,
-                            selection.end,
-                            '{{$variable}}',
-                          );
-                        },
-                        child: Text('{{$variable}}'),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  HiveService.deleteAiPrompt(prompt['identifier']);
-                  if (dialogContext.canPop()) {
-                    dialogContext.pop();
-                  }
-                },
-                child: const Text('重置'),
               ),
-              TextButton(
-                onPressed: () {
-                  HiveService.saveAiPrompt(
-                    prompt['identifier'],
-                    controller.text,
-                  );
-                  if (dialogContext.canPop()) {
-                    dialogContext.pop();
-                  }
-                },
-                child: const Text('保存'),
+              Wrap(
+                children: <Widget>[
+                  for (String variable in prompt['variables'] as List<String>)
+                    TextButton(
+                      onPressed: () {
+                        final TextSelection selection = controller.selection;
+                        if (selection.start == -1 || selection.end == -1) {
+                          return;
+                        }
+                        controller.text = controller.text.replaceRange(
+                          selection.start,
+                          selection.end,
+                          '{{$variable}}',
+                        );
+                      },
+                      child: Text('{{$variable}}'),
+                    ),
+                ],
               ),
             ],
-          );
-        },);
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                HiveService.deleteAiPrompt(prompt['identifier']);
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
+              },
+              child: const Text('重置'),
+            ),
+            TextButton(
+              onPressed: () {
+                HiveService.saveAiPrompt(
+                  prompt['identifier'],
+                  controller.text,
+                );
+                if (dialogContext.canPop()) {
+                  dialogContext.pop();
+                }
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

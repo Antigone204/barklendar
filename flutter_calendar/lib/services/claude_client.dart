@@ -47,7 +47,8 @@ class ClaudeClient extends AiClient {
     final Dio dio = AiDio.instance.dio;
 
     try {
-      final Response response = await dio.post(
+      final Response<ResponseBody> response =
+          await dio.post<ResponseBody>(
         url,
         options: Options(
           headers: getHeaders(),
@@ -61,7 +62,12 @@ class ClaudeClient extends AiClient {
         },
       );
 
-      final Stream<List<int>> stream = response.data.stream as Stream<List<int>>;
+      final ResponseBody? responseBody = response.data;
+      if (responseBody == null) {
+        throw Exception('Claude 响应体为空');
+      }
+      final Stream<List<int>> stream =
+          responseBody.stream as Stream<List<int>>;
       await for (final List<int> chunk in stream) {
         if (response.statusCode != 200) {
           yield* Stream.error('Error: ${response.statusCode}');
