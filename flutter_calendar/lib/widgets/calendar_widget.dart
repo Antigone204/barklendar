@@ -25,7 +25,8 @@ class CalendarWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<List<TaskModel>> tasksAsyncValue = ref.watch(tasksProvider);
+    final AsyncValue<List<TaskModel>> tasksAsyncValue =
+        ref.watch(tasksProvider);
 
     return Scaffold(
       body: Column(
@@ -35,7 +36,8 @@ class CalendarWidget extends ConsumerWidget {
             flex: 3,
             child: tasksAsyncValue.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (Object err, StackTrace stack) => Center(child: Text('加载任务失败: $err')),
+              error: (Object err, StackTrace stack) =>
+                  Center(child: Text('加载任务失败: $err')),
               data: (List<TaskModel> tasks) => _CalendarView(tasks: tasks),
             ),
           ),
@@ -162,14 +164,16 @@ class _SelectedTasksList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final DateTime selectedDate = ref.watch(selectedDateProvider);
-    final AsyncValue<List<TaskModel>> tasksAsyncValue = ref.watch(tasksProvider);
+    final AsyncValue<List<TaskModel>> tasksAsyncValue =
+        ref.watch(tasksProvider);
 
     final String dayOfWeek = DateFormat('E', 'zh_CN').format(selectedDate);
     final int dayOfMonth = selectedDate.day;
 
     return tasksAsyncValue.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (Object err, StackTrace stack) => Center(child: Text('加载任务失败: $err')),
+      error: (Object err, StackTrace stack) =>
+          Center(child: Text('加载任务失败: $err')),
       data: (List<TaskModel> tasks) {
         final List<TaskModel> selectedTasks = tasks
             .where((TaskModel task) => _isSameDay(task.dueDate, selectedDate))
@@ -331,8 +335,6 @@ Color _getTaskColor(TaskModel task) {
       return const Color(0xFF2196F3);
     case TaskPriority.low:
       return const Color(0xFF4CAF50);
-    default:
-      return Colors.grey;
   }
 }
 

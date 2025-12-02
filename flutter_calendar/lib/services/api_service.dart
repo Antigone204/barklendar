@@ -19,7 +19,7 @@ class ApiService {
     ),
   );
 
-  // 初始化拦截器
+// 初始化拦截器
   ApiService() {
     _setupInterceptors();
   }
@@ -32,7 +32,7 @@ class ApiService {
     // _dio.options.headers['Authorization'] = 'Bearer $token';
     // 或者执行一次健康检查
     try {
-      await _dio.get('/health').timeout(const Duration(seconds: 5));
+      await _dio.get<dynamic>('/health').timeout(const Duration(seconds: 5));
       debugPrint('ApiService initialized and server is healthy.');
     } catch (e) {
       debugPrint('ApiService health check failed: $e');
@@ -52,7 +52,8 @@ class ApiService {
           }
           return handler.next(options);
         },
-        onResponse: (Response response, ResponseInterceptorHandler handler) {
+        onResponse:
+            (Response<dynamic> response, ResponseInterceptorHandler handler) {
           // 添加响应日志
           debugPrint(
             '✅ Response: ${response.statusCode} ${response.statusMessage}',
@@ -204,7 +205,7 @@ class ApiService {
 
   Future<void> deleteCloudTask(String taskId) async {
     try {
-      await _dio.delete('/tasks/$taskId');
+      await _dio.delete<dynamic>('/tasks/$taskId');
     } on DioException catch (e) {
       throw _handleError(e, '删除云端任务失败');
     }
@@ -266,7 +267,7 @@ class ApiService {
 
   Future<void> updateUserPreferences(Map<String, dynamic> preferences) async {
     try {
-      await _dio.put(
+      await _dio.put<dynamic>(
         '/user/preferences',
         data: preferences,
       );

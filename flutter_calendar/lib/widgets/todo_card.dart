@@ -201,9 +201,6 @@ class TodoCard extends StatelessWidget {
       case TaskPriority.low:
         priorityColor = const Color(0xFF4CAF50); // 绿色 - 低优先级
         break;
-      default:
-        priorityColor = Colors.grey; // 备用颜色
-        break;
     }
 
     return Container(

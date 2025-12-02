@@ -10,19 +10,19 @@ import 'package:ai_smart_calendar/services/claude_client.dart';
 import 'package:ai_smart_calendar/services/gemini_client.dart';
 import 'package:ai_smart_calendar/services/deepseek_client.dart';
 import 'package:ai_smart_calendar/services/generic_openai_compatible_client.dart';
-import 'package:ai_smart_calendar/services/tool_registry_service.dart';
 import 'package:ai_smart_calendar/models/task_model.dart';
 import 'package:ai_smart_calendar/utils/date_utils.dart';
 import 'package:ai_smart_calendar/utils/intent_result.dart';
 import 'package:hive/hive.dart';
 
 class AiService {
+  /// 生成带工具调用的流式响应
   static Stream<String> generateResponseWithTools(
     List<Map<String, dynamic>> messages, {
     String? identifier,
     Map<String, String>? config,
     bool regenerate = false,
-    bool useCache = true, // 新增参数控制是否使用缓存
+    bool useCache = true,
   }) async* {
     identifier ??= HiveService.selectedAiService;
     config ??= HiveService.getAiConfig(identifier) ?? <String, String>{};
@@ -34,8 +34,9 @@ class AiService {
       return;
     }
 
-    final String messagesStr =
-        messages.map((Map<String, dynamic> m) => '${m['role']}: ${m['content']}').join('\n');
+    final String messagesStr = messages
+        .map((Map<String, dynamic> m) => '${m['role']}: ${m['content']}')
+        .join('\n');
     final int hash = messagesStr.hashCode;
 
     // 只有在启用缓存且不强制重新生成时才检查缓存
@@ -48,18 +49,6 @@ class AiService {
     }
 
     try {
-      // 从配置中获取必要参数
-      final String modelId = config['model'] ?? 'gpt-3.5-turbo';
-      final List<Map<String, dynamic>> toolsList = ToolRegistryService().generateToolSchemas();
-
-      final Map<String, Object> requestBody = <String, Object>{
-        'model': modelId,
-        'messages': messages,
-        'tools': toolsList,
-        'tool_choice': 'auto',
-        'stream': true,
-      };
-
       final Stream<String> stream = AiFactory.generateStream(
         identifier,
         messages,
@@ -74,7 +63,7 @@ class AiService {
         // ---- 探针结束 ----
 
         buffer += chunk;
-        yield chunk; // 改为逐块输出而不是累积buffer
+        yield chunk;
       }
     } catch (e) {
       yield 'AI请求失败: $e';
@@ -323,7 +312,9 @@ class AiService {
 
   /// 标记任务为完成/未完成
   static Future<Map<String, dynamic>> toggleTaskCompletion(
-      String taskId, bool completed,) async {
+    String taskId,
+    bool completed,
+  ) async {
     try {
       final TaskModel? task = HiveService.getTask(taskId);
       if (task == null) {
@@ -358,7 +349,8 @@ class AiService {
   static List<TaskModel> searchTasks(String query) {
     final List<TaskModel> allTasks = HiveService.getAllTasks();
     return allTasks
-        .where((TaskModel task) => task.title.toLowerCase().contains(query.toLowerCase()))
+        .where((TaskModel task) =>
+            task.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
   }
 
@@ -369,7 +361,9 @@ class AiService {
 
   /// 解析用户意图并返回一个结构化的结果（新版）
   static Future<IntentResult> processUserIntent(
-      String userMessage, String aiResponse,) async {
+    String userMessage,
+    String aiResponse,
+  ) async {
     try {
       final RegExp actionRegex =
           RegExp(r'\[AI_ACTION\]\s*(\{.*?\})\s*\[/AI_ACTION\]', dotAll: true);
@@ -407,322 +401,6 @@ class AiService {
       return GeneralResponse(naturalResponse);
     } catch (e) {
       return IntentError('$aiResponse\n\n⚠️ 处理您的指令时出现错误: $e');
-    }
-  }
-
-  /// 生成今天的日程响应
-  static String _generateTodayResponse(List<TaskModel> allTasks) {
-    final DateTime today = DateTime.now();
-    final List<TaskModel> todayTasks = allTasks.where((TaskModel task) {
-      if (task.dueDate == null) return false;
-      return task.dueDate!.year == today.year &&
-          task.dueDate!.month == today.month &&
-          task.dueDate!.day == today.day;
-    }).toList();
-
-    if (todayTasks.isEmpty) {
-      return '🎉 今天没有安排任何任务！\n\n您可以：\n• 添加新的任务\n• 规划明天的日程\n• 享受空闲时间';
-    }
-
-    final String dateStr = DateUtils.formatChineseDate(today);
-    final StringBuffer response = StringBuffer();
-    response.writeln('📅 $dateStr 的日程安排：\n');
-
-    int completedCount = 0;
-    int pendingCount = 0;
-
-    for (final TaskModel task in todayTasks) {
-      if (task.isCompleted) {
-        response.writeln('✅ ${task.title}');
-        completedCount++;
-      } else {
-        response.writeln('⏰ ${task.title}');
-        pendingCount++;
-      }
-    }
-
-    response.writeln('\n📊 统计：');
-    response.writeln('• 已完成: $completedCount 个任务');
-    response.writeln('• 待完成: $pendingCount 个任务');
-    response.writeln('• 总计: ${todayTasks.length} 个任务');
-
-    if (pendingCount > 0) {
-      response.writeln('\n💡 建议：优先完成重要的待办事项！');
-    }
-
-    return response.toString();
-  }
-
-  /// 生成明天的日程响应
-  static String _generateTomorrowResponse(List<TaskModel> allTasks) {
-    final DateTime tomorrow = DateTime.now().add(const Duration(days: 1));
-    final List<TaskModel> tomorrowTasks = allTasks.where((TaskModel task) {
-      if (task.dueDate == null) return false;
-      return task.dueDate!.year == tomorrow.year &&
-          task.dueDate!.month == tomorrow.month &&
-          task.dueDate!.day == tomorrow.day;
-    }).toList();
-
-    if (tomorrowTasks.isEmpty) {
-      return '📅 明天还没有安排任何任务！\n\n建议：\n• 提前规划明天的日程\n• 设置重要任务的提醒\n• 保持工作生活平衡';
-    }
-
-    final String dateStr = DateUtils.formatChineseDate(tomorrow);
-    final StringBuffer response = StringBuffer();
-    response.writeln('📅 $dateStr 的日程安排：\n');
-
-    for (final TaskModel task in tomorrowTasks) {
-      response.writeln('📌 ${task.title}');
-      if (task.description.isNotEmpty) {
-        response.writeln('   📝 ${task.description}');
-      }
-    }
-
-    response.writeln('\n💡 提醒：明天共有 ${tomorrowTasks.length} 个任务需要完成');
-    return response.toString();
-  }
-
-  /// 生成本周的日程响应
-  static String _generateThisWeekResponse(List<TaskModel> allTasks) {
-    final DateTime now = DateTime.now();
-    final DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final DateTime endOfWeek = startOfWeek.add(const Duration(days: 6));
-
-    final List<TaskModel> weekTasks = allTasks.where((TaskModel task) {
-      if (task.dueDate == null) return false;
-      return !task.dueDate!.isBefore(startOfWeek) &&
-          !task.dueDate!.isAfter(endOfWeek);
-    }).toList();
-
-    if (weekTasks.isEmpty) {
-      return '📅 本周还没有安排任何任务！\n\n建议：\n• 制定周计划\n• 设置长期目标\n• 合理安排时间';
-    }
-
-    final Map<int, List<TaskModel>> tasksByDay = <int, List<TaskModel>>{};
-    for (final TaskModel task in weekTasks) {
-      final int weekday = task.dueDate!.weekday;
-      tasksByDay.putIfAbsent(weekday, () => <TaskModel>[]).add(task);
-    }
-
-    final StringBuffer response = StringBuffer();
-    response.writeln(
-        '📅 本周日程安排（${DateUtils.formatChineseDate(startOfWeek)} - ${DateUtils.formatChineseDate(endOfWeek)}）：\n',);
-
-    for (int day = 1; day <= 7; day++) {
-      final List<TaskModel>? dayTasks = tasksByDay[day];
-      if (dayTasks != null && dayTasks.isNotEmpty) {
-        final DateTime dayDate = startOfWeek.add(Duration(days: day - 1));
-        response.writeln(
-            '${_getWeekdayEmoji(day)} ${DateUtils.formatChineseDate(dayDate)}：',);
-        for (final TaskModel task in dayTasks) {
-          response.writeln('   ${task.isCompleted ? '✅' : '⏰'} ${task.title}');
-        }
-        response.writeln();
-      }
-    }
-
-    response.writeln('📊 本周统计：');
-    response.writeln('• 总任务数: ${weekTasks.length}');
-    response.writeln('• 已完成: ${weekTasks.where((TaskModel t) => t.isCompleted).length}');
-    response.writeln('• 待完成: ${weekTasks.where((TaskModel t) => !t.isCompleted).length}');
-
-    return response.toString();
-  }
-
-  /// 生成所有任务的响应
-  static String _generateAllTasksResponse(List<TaskModel> allTasks) {
-    if (allTasks.isEmpty) {
-      return '📋 目前没有任何任务！\n\n您可以：\n• 创建新的任务\n• 导入现有日程\n• 设置提醒事项';
-    }
-
-    final StringBuffer response = StringBuffer();
-    response.writeln('📋 所有任务统计：\n');
-
-    response.writeln('📊 总体情况：');
-    response.writeln('• 总任务数: ${allTasks.length}');
-    response.writeln('• 已完成: ${allTasks.where((TaskModel t) => t.isCompleted).length}');
-    response.writeln('• 待完成: ${allTasks.where((TaskModel t) => !t.isCompleted).length}');
-    response.writeln(
-        '• 过期任务: ${allTasks.where((TaskModel t) => !t.isCompleted && t.dueDate != null && t.dueDate!.isBefore(DateTime.now())).length}',);
-
-    // 按分类统计
-    final Map<String, int> tasksByCategory = <String, int>{};
-    for (final TaskModel task in allTasks) {
-      tasksByCategory.update(
-        task.categoryId,
-        (int count) => count + 1,
-        ifAbsent: () => 1,
-      );
-    }
-
-    if (tasksByCategory.isNotEmpty) {
-      response.writeln('\n🏷️ 按分类统计：');
-      tasksByCategory.forEach((String categoryId, int count) {
-        response.writeln('• $categoryId: $count 个任务');
-      });
-    }
-
-    return response.toString();
-  }
-
-  /// 生成已完成任务的响应
-  static String _generateCompletedTasksResponse(List<TaskModel> allTasks) {
-    final List<TaskModel> completedTasks =
-        allTasks.where((TaskModel t) => t.isCompleted).toList();
-
-    if (completedTasks.isEmpty) {
-      return '✅ 目前没有已完成的任务！\n\n建议：\n• 开始完成一些任务\n• 设置可实现的目标\n• 庆祝每一个小成就';
-    }
-
-    final StringBuffer response = StringBuffer();
-    response.writeln('✅ 已完成的任务：\n');
-
-    for (final TaskModel task in completedTasks.take(10)) {
-      response.writeln('• ${task.title}');
-      if (task.dueDate != null) {
-        response.writeln('   📅 ${DateUtils.formatChineseDate(task.dueDate!)}');
-      }
-    }
-
-    if (completedTasks.length > 10) {
-      response.writeln('\n... 还有 ${completedTasks.length - 10} 个已完成的任务');
-    }
-
-    response.writeln('\n🎉 恭喜您完成了 ${completedTasks.length} 个任务！');
-    return response.toString();
-  }
-
-  /// 生成待完成任务的响应
-  static String _generatePendingTasksResponse(List<TaskModel> allTasks) {
-    final List<TaskModel> pendingTasks =
-        allTasks.where((TaskModel t) => !t.isCompleted).toList();
-
-    if (pendingTasks.isEmpty) {
-      return '🎊 太棒了！所有任务都已完成！\n\n您可以：\n• 创建新的挑战\n• 休息一下\n• 回顾已完成的任务';
-    }
-
-    final StringBuffer response = StringBuffer();
-    response.writeln('⏰ 待完成的任务：\n');
-
-    // 按截止日期排序
-    pendingTasks.sort((TaskModel a, TaskModel b) {
-      if (a.dueDate == null) return 1;
-      if (b.dueDate == null) return -1;
-      return a.dueDate!.compareTo(b.dueDate!);
-    });
-
-    for (final TaskModel task in pendingTasks.take(10)) {
-      final String dueInfo = task.dueDate != null
-          ? ' (📅 ${DateUtils.formatChineseDate(task.dueDate!)})'
-          : ' (无截止日期)';
-      response.writeln('• ${task.title}$dueInfo');
-    }
-
-    if (pendingTasks.length > 10) {
-      response.writeln('\n... 还有 ${pendingTasks.length - 10} 个待完成的任务');
-    }
-
-    response.writeln('\n💪 加油！您还有 ${pendingTasks.length} 个任务需要完成');
-    return response.toString();
-  }
-
-  /// 生成过期任务的响应
-  static String _generateOverdueTasksResponse(List<TaskModel> allTasks) {
-    final DateTime now = DateTime.now();
-    final List<TaskModel> overdueTasks = allTasks
-        .where((TaskModel task) =>
-            !task.isCompleted &&
-            task.dueDate != null &&
-            task.dueDate!.isBefore(now),)
-        .toList();
-
-    if (overdueTasks.isEmpty) {
-      return '✅ 太好了！没有过期任务！\n\n继续保持良好的时间管理习惯！';
-    }
-
-    final StringBuffer response = StringBuffer();
-    response.writeln('⚠️ 过期任务：\n');
-
-    for (final TaskModel task in overdueTasks) {
-      final String overdueDays = _calculateOverdueDays(task.dueDate!, now);
-      response.writeln('• ${task.title} (已过期 $overdueDays)');
-    }
-
-    response.writeln('\n🚨 您有 ${overdueTasks.length} 个任务已过期');
-    response.writeln('💡 建议：优先处理这些过期任务！');
-    return response.toString();
-  }
-
-  /// 生成通用响应
-  static String _generateGeneralResponse(
-      List<TaskModel> allTasks, String userMessage,) {
-    final int totalTasks = allTasks.length;
-    final int completedTasks = allTasks.where((TaskModel t) => t.isCompleted).length;
-    final int pendingTasks = totalTasks - completedTasks;
-    final int overdueTasks = allTasks
-        .where((TaskModel task) =>
-            !task.isCompleted &&
-            task.dueDate != null &&
-            task.dueDate!.isBefore(DateTime.now()),)
-        .length;
-
-    return '''根据您的日程数据，我为您提供以下信息：
-
-📊 总体统计：
-• 总任务数: $totalTasks
-• 已完成: $completedTasks
-• 待完成: $pendingTasks
-• 过期任务: $overdueTasks
-
-💡 基于您的提问 "$userMessage"，我建议：
-
-1. 使用具体的关键词获取更详细的信息，例如：
-   - "今天的日程"
-   - "本周的任务"  
-   - "已完成的任务"
-   - "待完成的任务"
-
-2. 我可以帮您：
-   • 分析时间使用情况
-   • 提供任务规划建议
-   • 生成智能提醒
-   • 总结日程安排
-
-请告诉我您具体想了解什么，我会为您提供更精准的帮助！''';
-  }
-
-  /// 获取星期几的表情符号
-  static String _getWeekdayEmoji(int weekday) {
-    switch (weekday) {
-      case 1:
-        return '周一 📅';
-      case 2:
-        return '周二 📅';
-      case 3:
-        return '周三 📅';
-      case 4:
-        return '周四 📅';
-      case 5:
-        return '周五 📅';
-      case 6:
-        return '周六 🎉';
-      case 7:
-        return '周日 🌞';
-      default:
-        return '📅';
-    }
-  }
-
-  /// 计算过期天数
-  static String _calculateOverdueDays(DateTime dueDate, DateTime now) {
-    final Duration difference = now.difference(dueDate);
-    final int days = difference.inDays;
-    if (days == 0) {
-      return '今天';
-    } else if (days == 1) {
-      return '1天';
-    } else {
-      return '$days天';
     }
   }
 }

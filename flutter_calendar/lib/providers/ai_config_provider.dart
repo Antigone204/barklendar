@@ -71,23 +71,27 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
       ]);
 
       // 2. 解析加载结果
-      final List<Map<String, String>>? loadedConfigs = results[0] as List<Map<String, String>>?;
+      final List<Map<String, String>>? loadedConfigs =
+          results[0] as List<Map<String, String>>?;
       final String? activeConfigId = results[1] as String?;
 
       // 3. **核心逻辑：检查加载的数据是否有效**
       if (loadedConfigs != null && loadedConfigs.isNotEmpty) {
         // 如果成功加载了配置列表
         debugPrint(
-            '[AIConfigProvider] Successfully loaded ${loadedConfigs.length} configs from Hive.',);
+          '[AIConfigProvider] Successfully loaded ${loadedConfigs.length} configs from Hive.',
+        );
 
         // 验证 activeConfigId 是否仍然有效，如果无效则回退到第一个
         final String? validActiveId = activeConfigId != null &&
-                loadedConfigs.any((Map<String, String> c) => c['id'] == activeConfigId)
+                loadedConfigs
+                    .any((Map<String, String> c) => c['id'] == activeConfigId)
             ? activeConfigId
             : loadedConfigs.first['id'];
 
         debugPrint(
-            '[AIConfigProvider] Active config ID set to: $validActiveId',);
+          '[AIConfigProvider] Active config ID set to: $validActiveId',
+        );
 
         return AiConfigState(
           configs: loadedConfigs,
@@ -96,20 +100,23 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
       } else {
         // 4. **回退逻辑：如果Hive中没有数据，则创建并返回默认配置**
         debugPrint(
-            '[AIConfigProvider] No configs found in Hive. Creating default config...',);
+          '[AIConfigProvider] No configs found in Hive. Creating default config...',
+        );
         final AiConfigState defaultState = AiConfigState.defaultState();
 
         // **重要**：将创建的默认配置立即存入Hive，以便下次能加载
         await HiveService.saveAiConfigs(defaultState.configs);
         await HiveService.saveActiveAiConfigId(defaultState.activeConfigId);
         debugPrint(
-            '[AIConfigProvider] Default config saved to Hive for future use.',);
+          '[AIConfigProvider] Default config saved to Hive for future use.',
+        );
 
         return defaultState;
       }
     } catch (e) {
       debugPrint(
-          '[AIConfigProvider] Error loading from Hive. Falling back to default. Error: $e',);
+        '[AIConfigProvider] Error loading from Hive. Falling back to default. Error: $e',
+      );
       // 如果加载过程中发生任何错误，也安全地回退到默认状态
       return AiConfigState.defaultState();
     }
@@ -120,14 +127,16 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
     await HiveService.saveAiConfigs(state.configs);
     await HiveService.saveActiveAiConfigId(state.activeConfigId);
     debugPrint(
-        'AI配置已保存到Hive: ${state.configs.length} 个配置，激活配置ID: ${state.activeConfigId}',); // 增加日志
+      'AI配置已保存到Hive: ${state.configs.length} 个配置，激活配置ID: ${state.activeConfigId}',
+    ); // 增加日志
   }
 
   /// 添加新配置
   Future<void> addConfig(Map<String, String> newConfig) async {
     // 先更新状态，再持久化
     final AiConfigState previousState = await future;
-    final List<Map<String, String>> configs = List<Map<String, String>>.from(previousState.configs);
+    final List<Map<String, String>> configs =
+        List<Map<String, String>>.from(previousState.configs);
 
     // 确保配置有ID
     if (!newConfig.containsKey('id') || newConfig['id']!.isEmpty) {
@@ -142,10 +151,14 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
 
   /// 更新配置
   Future<void> updateConfig(
-      String id, Map<String, String> updatedConfig,) async {
+    String id,
+    Map<String, String> updatedConfig,
+  ) async {
     final AiConfigState previousState = await future;
-    final List<Map<String, String>> configs = List<Map<String, String>>.from(previousState.configs);
-    final int index = configs.indexWhere((Map<String, String> config) => config['id'] == id);
+    final List<Map<String, String>> configs =
+        List<Map<String, String>>.from(previousState.configs);
+    final int index =
+        configs.indexWhere((Map<String, String> config) => config['id'] == id);
 
     if (index != -1) {
       configs[index] = updatedConfig;
@@ -158,7 +171,8 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
   /// 删除配置
   Future<void> deleteConfig(String id) async {
     final AiConfigState previousState = await future;
-    final List<Map<String, String>> configs = List<Map<String, String>>.from(previousState.configs);
+    final List<Map<String, String>> configs =
+        List<Map<String, String>>.from(previousState.configs);
     configs.removeWhere((Map<String, String> config) => config['id'] == id);
 
     // 如果删除的是当前激活的配置，则激活第一个配置
@@ -183,7 +197,8 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
       orElse: () => previousState.configs.first,
     );
 
-    final AiConfigState newState = previousState.copyWith(activeConfigId: config['id']!);
+    final AiConfigState newState =
+        previousState.copyWith(activeConfigId: config['id']!);
     state = AsyncData(newState);
     await _saveConfigs(newState);
 
@@ -197,9 +212,11 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
     if (currentState == null) return null;
 
     return currentState.configs.firstWhere(
-      (Map<String, String> config) => config['id'] == currentState.activeConfigId,
-      orElse: () =>
-          currentState.configs.isNotEmpty ? currentState.configs.first : <String, String>{},
+      (Map<String, String> config) =>
+          config['id'] == currentState.activeConfigId,
+      orElse: () => currentState.configs.isNotEmpty
+          ? currentState.configs.first
+          : <String, String>{},
     );
   }
 
@@ -216,19 +233,22 @@ class AiConfigNotifier extends AsyncNotifier<AiConfigState> {
 }
 
 /// AI配置状态Provider
-final AsyncNotifierProviderImpl<AiConfigNotifier, AiConfigState> aiConfigProvider = AsyncNotifierProvider<AiConfigNotifier, AiConfigState>(
+final AsyncNotifierProvider<AiConfigNotifier, AiConfigState> aiConfigProvider =
+    AsyncNotifierProvider<AiConfigNotifier, AiConfigState>(
   () => AiConfigNotifier(),
 );
 
 /// 当前激活配置的Provider
-final Provider<Map<String, String>?> activeAiConfigProvider = Provider<Map<String, String>?>((ProviderRef<Map<String, String>?> ref) {
+final Provider<Map<String, String>?> activeAiConfigProvider =
+    Provider<Map<String, String>?>((ProviderRef<Map<String, String>?> ref) {
   final AsyncValue<AiConfigState> asyncState = ref.watch(aiConfigProvider);
 
   return asyncState.when(
     data: (AiConfigState state) {
       return state.configs.firstWhere(
         (Map<String, String> config) => config['id'] == state.activeConfigId,
-        orElse: () => state.configs.isNotEmpty ? state.configs.first : <String, String>{},
+        orElse: () =>
+            state.configs.isNotEmpty ? state.configs.first : <String, String>{},
       );
     },
     loading: () => null,
@@ -237,7 +257,9 @@ final Provider<Map<String, String>?> activeAiConfigProvider = Provider<Map<Strin
 });
 
 /// AI配置列表Provider
-final Provider<List<Map<String, String>>> aiConfigsProvider = Provider<List<Map<String, String>>>((ProviderRef<List<Map<String, String>>> ref) {
+final Provider<List<Map<String, String>>> aiConfigsProvider =
+    Provider<List<Map<String, String>>>(
+        (ProviderRef<List<Map<String, String>>> ref) {
   final AsyncValue<AiConfigState> asyncState = ref.watch(aiConfigProvider);
 
   return asyncState.when(

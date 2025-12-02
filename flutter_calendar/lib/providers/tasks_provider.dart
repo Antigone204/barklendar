@@ -61,7 +61,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
 }
 
 // 2. 创建一个全局的、唯一的 tasksProvider 实例
-final AsyncNotifierProviderImpl<TasksNotifier, List<TaskModel>> tasksProvider =
+final AsyncNotifierProvider<TasksNotifier, List<TaskModel>> tasksProvider =
     AsyncNotifierProvider<TasksNotifier, List<TaskModel>>(
   () {
     return TasksNotifier();
@@ -84,10 +84,11 @@ enum TaskFilter {
 
 // B. 创建一个 Provider.family，它可以根据传入的过滤类型来返回不同的结果
 final AutoDisposeProviderFamily<AsyncValue<List<TaskModel>>, TaskFilter>
-    filteredTasksProvider = Provider.autoDispose
-        .family<AsyncValue<List<TaskModel>>, TaskFilter>(
-            (AutoDisposeProviderRef<AsyncValue<List<TaskModel>>> ref,
-                TaskFilter filter,) {
+    filteredTasksProvider =
+    Provider.autoDispose.family<AsyncValue<List<TaskModel>>, TaskFilter>((
+  AutoDisposeProviderRef<AsyncValue<List<TaskModel>>> ref,
+  TaskFilter filter,
+) {
   // 监听（watch）主任务列表的变化
   final AsyncValue<List<TaskModel>> tasksAsync = ref.watch(tasksProvider);
 
@@ -197,8 +198,7 @@ class TaskListState {
 final AutoDisposeProvider<AsyncValue<TaskListState>> taskListStateProvider =
     Provider.autoDispose<AsyncValue<TaskListState>>(
   (AutoDisposeProviderRef<AsyncValue<TaskListState>> ref) {
-    final AsyncValue<List<TaskModel>> pending =
-        ref.watch(pendingTasksProvider);
+    final AsyncValue<List<TaskModel>> pending = ref.watch(pendingTasksProvider);
     final AsyncValue<List<TaskModel>> completed =
         ref.watch(completedTasksProvider);
 

@@ -17,7 +17,8 @@ class AIChatHistoryService {
 
   /// 保存聊天历史
   static Future<void> saveChatHistory(
-      List<Map<String, dynamic>> messages,) async {
+    List<Map<String, dynamic>> messages,
+  ) async {
     try {
       final Directory cacheDir = await getCacheDir();
       final File file = File('${cacheDir.path}/$chatHistoryFileName');
@@ -49,12 +50,14 @@ class AIChatHistoryService {
 
       if (await file.exists()) {
         final String content = await file.readAsString();
-        final Map<String, dynamic> data = json.decode(content) as Map<String, dynamic>;
+        final Map<String, dynamic> data =
+            json.decode(content) as Map<String, dynamic>;
 
         // 检查时间戳，如果超过7天则不加载
         final int? timestamp = data['timestamp'] as int?;
         if (timestamp != null) {
-          final DateTime savedTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+          final DateTime savedTime =
+              DateTime.fromMillisecondsSinceEpoch(timestamp);
           final DateTime now = DateTime.now();
           if (now.difference(savedTime).inDays > 7) {
             // 超过7天，清除文件
@@ -63,10 +66,12 @@ class AIChatHistoryService {
           }
         }
 
-        final List? messages = data['messages'] as List?;
-        if (messages != null) {
-          return messages.cast<Map<String, dynamic>>();
-        }
+        final List<dynamic>? messageList = data['messages'] as List<dynamic>?;
+
+        return messageList
+                ?.map((item) => item as Map<String, dynamic>)
+                .toList() ??
+            <Map<String, dynamic>>[];
       }
     } catch (e) {
       // 静默处理错误，返回空列表
