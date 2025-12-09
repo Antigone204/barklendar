@@ -185,6 +185,7 @@ class AIServiceInstance implements AIService {
       final StringBuffer buffer = StringBuffer();
       final Stream<String> stream = static_ai.AiService.generateResponseWithTools(
         messages,
+        identifier: config['id'] ?? config['type'] ?? 'openai', // Fallback to 'openai' or 'type'
         config: config,
       );
 
@@ -203,6 +204,7 @@ class AIServiceInstance implements AIService {
   Future<Map<String, dynamic>> testConnection() async {
     try {
       return await static_ai.AiService.testConnection(
+        identifier: config['id'] ?? config['type'] ?? 'openai',
         config: config,
       );
     } catch (e) {

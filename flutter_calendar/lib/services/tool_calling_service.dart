@@ -9,20 +9,26 @@ import 'package:ai_smart_calendar/services/ai_service_interface.dart';
 import 'package:ai_smart_calendar/services/calendar_tool_service.dart';
 import 'package:ai_smart_calendar/services/tool_registry_service.dart';
 import 'package:ai_smart_calendar/providers/repository_providers.dart';
+import 'package:ai_smart_calendar/repositories/task_repository.dart';
+import 'package:ai_smart_calendar/services/ai_service.dart';
+import 'package:ai_smart_calendar/models/task_model.dart';
 
 /// 核心调度器 - AI交互的中枢神经系统
 class ToolCallingService {
   final Ref _ref;
   final ToolRegistryService _toolRegistry;
   final CalendarToolService _calendarToolService;
+  final TaskRepository _taskRepository;
 
   ToolCallingService({
     required Ref ref,
     required ToolRegistryService toolRegistry,
     required CalendarToolService calendarToolService,
+    required TaskRepository taskRepository,
   })  : _ref = ref,
         _toolRegistry = toolRegistry,
-        _calendarToolService = calendarToolService;
+        _calendarToolService = calendarToolService,
+        _taskRepository = taskRepository;
 
   /// 核心方法：执行一次完整的AI交互回合（向后兼容版本）
   /// 实现"思考-行动-总结"循环
@@ -33,12 +39,14 @@ class ToolCallingService {
       final List<Map<String, dynamic>> toolSchemas = _toolRegistry.generateToolSchemas();
 
       // 步骤2: 构建思考阶段的系统提示
-      final String currentTime = DateTime.now().toIso8601String();
+      // 步骤2: 构建思考阶段的系统提示
+      final List<TaskModel> tasks = await _taskRepository.getTasks();
+      final String taskContext = AiService.generateTaskContextPrompt(userMessage, tasks);
+      
       final String thinkingSystemPrompt = '''
-你是一个智能日历助手。你可以使用以下工具来帮助用户：
+$taskContext
 
-## 当前上下文
-- 当前日期和时间是: $currentTime
+你可以使用以下工具来帮助用户：
 
 ${_toolRegistry.generateToolPrompt()}
 
@@ -183,7 +191,7 @@ ${toolResponse.isSuccess ? '结果数据: ${toolResponse.result}' : '错误信�
 
         // 2. 准备工具和系统提示
         final List<Map<String, dynamic>> toolSchemas = _toolRegistry.generateToolSchemas();
-        final String systemPrompt = _buildSystemPrompt();
+        final String systemPrompt = await _buildSystemPrompt(userMessage);
 
         final List<ChatMessage> messagesForApi = <ChatMessage>[
           ChatMessage(
@@ -381,13 +389,14 @@ ${toolResponse.isSuccess ? '结果数据: ${toolResponse.result}' : '错误信�
   }
 
   /// 构建系统提示的私有方法
-  String _buildSystemPrompt() {
-    final String currentTime = DateTime.now().toIso8601String();
-    return '''
-你是一个智能日历助手。你可以使用以下工具来帮助用户：
+  Future<String> _buildSystemPrompt(String userMessage) async {
+    final List<TaskModel> tasks = await _taskRepository.getTasks();
+    final String taskContext = AiService.generateTaskContextPrompt(userMessage, tasks);
 
-## 当前上下文
-- 当前日期和时间是: $currentTime
+    return '''
+$taskContext
+
+你可以使用以下工具来帮助用户：
 
 ${_toolRegistry.generateToolPrompt()}
 
@@ -412,6 +421,7 @@ ${_toolRegistry.generateToolPrompt()}
 请用中文回复用户。
 ''';
   }
+
 
   /// 处理循环中的工具调用
   Future<ToolCallResponse> _handleFunctionCallInLoop(

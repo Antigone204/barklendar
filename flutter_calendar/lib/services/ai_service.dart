@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:ai_smart_calendar/services/ai_cache.dart';
 import 'package:ai_smart_calendar/services/ai_factory.dart';
-import 'package:ai_smart_calendar/services/hive_service.dart';
+// import 'package:ai_smart_calendar/services/hive_service.dart'; // Removed dependency
 import 'package:ai_smart_calendar/services/ai_client.dart';
 import 'package:ai_smart_calendar/services/openai_client.dart';
 import 'package:ai_smart_calendar/services/claude_client.dart';
@@ -13,7 +13,7 @@ import 'package:ai_smart_calendar/services/generic_openai_compatible_client.dart
 import 'package:ai_smart_calendar/models/task_model.dart';
 import 'package:ai_smart_calendar/utils/date_utils.dart';
 import 'package:ai_smart_calendar/utils/intent_result.dart';
-import 'package:hive/hive.dart';
+// import 'package:hive/hive.dart'; // Removed dependency
 
 class AiService {
   /// 生成带工具调用的流式响应
@@ -24,8 +24,15 @@ class AiService {
     bool regenerate = false,
     bool useCache = true,
   }) async* {
-    identifier ??= HiveService.selectedAiService;
-    config ??= HiveService.getAiConfig(identifier) ?? <String, String>{};
+
+    // identifier ??= HiveService.selectedAiService; // Removed HiveService dependency
+    // config ??= HiveService.getAiConfig(identifier) ?? <String, String>{}; // Removed HiveService dependency
+    
+    if (identifier == null || config == null) {
+       yield 'AI服务配置错误: 缺少 identifier 或 config';
+       return;
+    }
+
     String buffer = '';
 
     final String? url = config['url'];
@@ -79,8 +86,17 @@ class AiService {
     String? identifier,
     Map<String, String>? config,
   }) async {
-    identifier ??= HiveService.selectedAiService;
-    config ??= HiveService.getAiConfig(identifier) ?? <String, String>{};
+
+    // identifier ??= HiveService.selectedAiService; // Removed HiveService dependency
+    // config ??= HiveService.getAiConfig(identifier) ?? <String, String>{}; // Removed HiveService dependency
+    
+    if (identifier == null || config == null) {
+        return <String, dynamic>{
+        'success': false,
+        'message': '配置错误',
+        'error': '缺少 identifier 或 config',
+      };
+    }
 
     final String? url = config['url'];
     if (url == null || url.isEmpty) {
@@ -136,10 +152,10 @@ class AiService {
   }
 
   /// 获取Hive中的任务数据并生成AI提示
-  static String generateTaskContextPrompt(String userMessage) {
+  static String generateTaskContextPrompt(String userMessage, List<TaskModel> allTasks) {
     try {
       // 获取所有任务数据
-      final List<TaskModel> allTasks = HiveService.getAllTasks();
+      // final List<TaskModel> allTasks = HiveService.getAllTasks(); // Removed HiveService dependency
 
       if (allTasks.isEmpty) {
         return '''你是一个智能日历助手。当前用户没有任何日程安排。
@@ -222,142 +238,7 @@ class AiService {
     }
   }
 
-  /// 创建新任务
-  static Future<Map<String, dynamic>> createTask({
-    required String title,
-    required DateTime dueDate,
-    String description = '',
-    String categoryId = 'default',
-    TaskPriority priority = TaskPriority.medium,
-  }) async {
-    try {
-      // 确保Hive已初始化
-      if (!Hive.isBoxOpen('tasks')) {
-        await HiveService.init();
-      }
-
-      final String taskId = DateTime.now().millisecondsSinceEpoch.toString();
-
-      final TaskModel newTask = TaskModel(
-        id: taskId,
-        title: title,
-        description: description,
-        createdAt: DateTime.now(),
-        dueDate: dueDate,
-        categoryId: categoryId,
-        priority: priority,
-      );
-
-      await HiveService.addTask(newTask);
-
-      // 验证任务是否真的添加成功
-      final TaskModel? addedTask = HiveService.getTask(taskId);
-      if (addedTask == null) {
-        return <String, dynamic>{
-          'success': false,
-          'message': '任务创建失败：无法验证任务是否保存成功',
-          'task': null,
-        };
-      }
-
-      return <String, dynamic>{
-        'success': true,
-        'message': '任务创建成功',
-        'task': newTask,
-      };
-    } catch (e) {
-      return <String, dynamic>{
-        'success': false,
-        'message': '创建任务失败: $e',
-        'task': null,
-      };
-    }
-  }
-
-  /// 更新任务
-  static Future<Map<String, dynamic>> updateTask(TaskModel task) async {
-    try {
-      await HiveService.updateTask(task);
-
-      return <String, dynamic>{
-        'success': true,
-        'message': '任务更新成功',
-        'task': task,
-      };
-    } catch (e) {
-      return <String, dynamic>{
-        'success': false,
-        'message': '更新任务失败: $e',
-        'task': null,
-      };
-    }
-  }
-
-  /// 删除任务
-  static Future<Map<String, dynamic>> deleteTask(String taskId) async {
-    try {
-      await HiveService.deleteTask(taskId);
-
-      return <String, dynamic>{
-        'success': true,
-        'message': '任务删除成功',
-      };
-    } catch (e) {
-      return <String, dynamic>{
-        'success': false,
-        'message': '删除任务失败: $e',
-      };
-    }
-  }
-
-  /// 标记任务为完成/未完成
-  static Future<Map<String, dynamic>> toggleTaskCompletion(
-    String taskId,
-    bool completed,
-  ) async {
-    try {
-      final TaskModel? task = HiveService.getTask(taskId);
-      if (task == null) {
-        return <String, dynamic>{
-          'success': false,
-          'message': '找不到指定的任务',
-        };
-      }
-
-      final TaskModel updatedTask = task.copyWith(
-        isCompleted: completed,
-        completedAt: completed ? DateTime.now() : null,
-      );
-
-      await HiveService.updateTask(updatedTask);
-
-      return <String, dynamic>{
-        'success': true,
-        'message': completed ? '任务标记为已完成' : '任务标记为未完成',
-        'task': updatedTask,
-      };
-    } catch (e) {
-      return <String, dynamic>{
-        'success': false,
-        'message': '更新任务状态失败: $e',
-        'task': null,
-      };
-    }
-  }
-
-  /// 根据标题搜索任务
-  static List<TaskModel> searchTasks(String query) {
-    final List<TaskModel> allTasks = HiveService.getAllTasks();
-    return allTasks
-        .where((TaskModel task) =>
-            task.title.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-  }
-
-  /// 获取指定日期的任务
-  static List<TaskModel> getTasksByDate(DateTime date) {
-    return HiveService.getTasksByDate(date);
-  }
+// Removed CRUD methods: createTask, updateTask, deleteTask, toggleTaskCompletion, searchTasks, getTasksByDate
 
   /// 解析用户意图并返回一个结构化的结果（新版）
   static Future<IntentResult> processUserIntent(

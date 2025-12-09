@@ -96,5 +96,7 @@ final Provider<ToolCallingService> toolCallingServiceProvider =
     ref: ref,
     toolRegistry: toolRegistry,
     calendarToolService: calendarToolService,
+    taskRepository: ref.read(taskRepositoryProvider),
   );
+
 });
