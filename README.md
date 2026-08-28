@@ -130,5 +130,12 @@ flutter run -d chrome
 
 ---
 
+## 🙏 致谢 (Acknowledgements)
+
+- 本项目的 AI 客户端与多模型适配层设计参考了优秀开源阅读器项目 [Anx Reader](https://github.com/Anxcye/anx-reader)，感谢开源社区的贡献与启发！
+- 感谢 Flutter、Riverpod 及 Hive 社区提供的优秀生态与工具支持。
+
+---
+
 ## 📄 License
 This project is open-sourced under the [MIT License](LICENSE).
