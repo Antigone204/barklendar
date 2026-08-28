@@ -1,5 +1,24 @@
-# 忽略所有子文件夹里的 build 目录
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE and Editor files
+.vscode/
+.cursor/
+.idea/
+*.iml
+*.iws
+
+# Flutter / Dart build artifacts
 **/build/
 **/.dart_tool/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+
+# Logs and secrets
+*.log
+*.local
+.env
